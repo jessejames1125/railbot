@@ -131,7 +131,7 @@ async function cmdRun(args, values) {
 
   const attended = Boolean(process.stdin.isTTY);
   say(mode === 'practice'
-    ? `${green('Practice mode.')} Nothing real will happen.\nJudge: ${judge.name}${judge.source ? dim(` (${judge.source})`) : ''}. Limits: ${bot.limits.perRun} a run, ${bot.limits.perDay} a day.`
+    ? `${green('Practice mode.')} Nothing real will happen.\nJudge: ${judge.name}${judge.source ?? judge.model ? dim(` (${judge.source ?? judge.model})`) : ''}. Limits: ${bot.limits.perRun} a run, ${bot.limits.perDay} a day.`
     : `${red('LIVE RUN.')} Approved items will really happen. Judge: ${judge.name}. Limits: ${bot.limits.perRun} a run, ${bot.limits.perDay} a day.`);
   say('');
   const approver = attended ? terminalApprover() : null;
