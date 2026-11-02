@@ -21,6 +21,21 @@ export const LOCKED = Object.freeze({
 
 const ACTION_NAME = /^[a-z][a-z0-9-]{0,40}$/;
 
+/** A real undo is words saying how; an empty string or true is not one. */
+const hasUndo = (a) => typeof a?.undo === 'string' && a.undo.trim().length > 0;
+
+/**
+ * The locked subject an item names, however it is spelled ("Refund", " refunds "). An
+ * unknown subject comes back as itself, and gateFor sends it to a person.
+ */
+export function lockedSubject(about) {
+  if (typeof about !== 'string' || !about.trim()) return null;
+  const s = about.trim().toLowerCase().replace(/[\s_]+/g, '-');
+  if (Object.hasOwn(LOCKED, s)) return s;
+  if (s.endsWith('s') && Object.hasOwn(LOCKED, s.slice(0, -1))) return s.slice(0, -1);
+  return s;
+}
+
 /** Checks the bot's own declaration. Returns the problem, or null. */
 export function scopeProblem(scope) {
   if (scope == null) return null;
@@ -32,7 +47,7 @@ export function scopeProblem(scope) {
     if (!RISKS.includes(a?.risk)) return `scope.actions.${type}.risk must be low, medium or high`;
     if (a.about != null && !LOCKED[a.about]) return `scope.actions.${type}.about must be one of: ${Object.keys(LOCKED).join(', ')}`;
     if (a.about && a.risk !== 'high') return `scope.actions.${type} is about ${a.about}, so its risk must be high: ${LOCKED[a.about]}`;
-    if (a.risk !== 'high' && !(typeof a.undo === 'string' && a.undo.trim())) {
+    if (a.risk !== 'high' && !hasUndo(a)) {
       return `scope.actions.${type} runs without a person (${a.risk} risk), so it must say how it is undone in undo. An automatic action must be undoable, or it must not be automatic`;
     }
   }
@@ -67,7 +82,7 @@ export function effectiveScope(bot, dir) {
   }
   const actions = {};
   for (const [type, declared] of Object.entries(bot.scope.actions)) {
-    const asked = human?.actions?.[type];
+    const asked = human?.actions && Object.hasOwn(human.actions, type) ? human.actions[type] : undefined;
     if (human?.actions && asked === undefined) continue; // the person listed actions and left this one out
     if (asked === false) continue;
     let risk = declared.risk;
@@ -76,7 +91,7 @@ export function effectiveScope(bot, dir) {
       if (!RISKS.includes(wanted)) throw new Error(`scope.json: ${type} risk must be low, medium or high`);
       if (declared.about && wanted !== 'high') {
         warnings.push(`LOCKED: scope.json tried to set ${type} to ${wanted} risk. Ignored: ${LOCKED[declared.about]}. This cannot be changed in scope.json.`);
-      } else if (wanted !== 'high' && !declared.undo) {
+      } else if (wanted !== 'high' && !hasUndo(declared)) {
         warnings.push(`scope.json tried to set ${type} to ${wanted} risk, but the bot gives no way to undo it. Kept at high.`);
       } else {
         risk = wanted;
@@ -90,7 +105,7 @@ export function effectiveScope(bot, dir) {
   const narrow = (key) => {
     const mine = bot.scope[key] ?? null;
     const theirs = human?.[key] ?? null;
-    if (!mine) return null;
+    if (!mine) return theirs;
     return theirs ? mine.filter((x) => theirs.includes(x)) : mine;
   };
   const limits = {};
@@ -110,8 +125,11 @@ export function gateFor(scope, item) {
   const type = item.action?.type;
   const a = typeof type === 'string' && Object.hasOwn(scope.actions, type) ? scope.actions[type] : null;
   if (!a) return { refused: `"${type}" is outside this bot's scope (allowed: ${Object.keys(scope.actions).join(', ') || 'nothing'})` };
-  const about = a.about ?? (item.about && LOCKED[item.about] ? item.about : null);
-  if (about) return { risk: 'high', locked: LOCKED[about], undo: a.undo ?? null };
+  const about = a.about ?? lockedSubject(item.about);
+  if (about) {
+    const locked = Object.hasOwn(LOCKED, about) ? LOCKED[about] : `the item says it is about "${about}", which is not a subject railbot knows, so a person decides`;
+    return { risk: 'high', locked, undo: a.undo ?? null };
+  }
   return { risk: a.risk, locked: null, undo: a.undo ?? null };
 }
 

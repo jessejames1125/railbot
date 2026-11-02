@@ -68,23 +68,44 @@ function normalizeItem(raw) {
 /** Who a judge is, for the rule that the checker is never the author. */
 export const judgeId = (judge) => judge.id ?? `${judge.name}${judge.model ? `:${judge.model}` : ''}`;
 
+const FAMILY = /\b(opus|sonnet|haiku)\b/;
+/**
+ * True when the checker and the author are the same model. The same family under another
+ * name counts ("claude:sonnet" and "anthropic:claude-sonnet-4-6"), so a renamed model
+ * cannot check its own work.
+ */
+export function sameModel(checker, author) {
+  const a = String(checker).toLowerCase();
+  const b = String(author).toLowerCase();
+  if (a === b) return true;
+  const fa = FAMILY.exec(a.replace(/[-_:.]/g, ' '))?.[1];
+  const fb = FAMILY.exec(b.replace(/[-_:.]/g, ' '))?.[1];
+  return Boolean(fa && fa === fb);
+}
+
 /** The gates a run uses. Only experiments change these; the command line has no switch for it. */
 export const DEFAULT_GATES = Object.freeze({ deterministic: true, checker: true, person: 'tiered' });
 
-/** Runs the bot's own deterministic checks. Each returns null, a hold reason, or { block }. */
-function runChecks(bot, item, action) {
+/**
+ * Runs the bot's own deterministic checks. Each returns (or resolves to) null, a hold
+ * reason, { hold }, or { block }. Anything else blocks: a check that answers in a shape we
+ * do not know has not said the item is fine.
+ */
+async function runChecks(bot, item, action) {
   const out = { hold: [], block: [] };
+  const text = (v) => typeof v === 'string' && v.trim();
   for (const check of bot.checks ?? []) {
     let r;
     try {
-      r = check({ ...item, action });
+      r = await check({ ...item, action });
     } catch (e) {
-      r = { block: `a check failed to run: ${e.message}` };
+      r = { block: `a check failed to run: ${e?.message ?? e}` };
     }
-    if (!r) continue;
-    if (typeof r === 'string') out.hold.push(r);
-    else if (r.block) out.block.push(String(r.block));
-    else if (r.hold) out.hold.push(String(r.hold));
+    if (r == null) continue;
+    if (text(r)) out.hold.push(r);
+    else if (text(r?.block)) out.block.push(r.block);
+    else if (text(r?.hold)) out.hold.push(r.hold);
+    else out.block.push(`a check answered ${JSON.stringify(r) ?? typeof r}, which is not null, a reason, { hold } or { block }`);
   }
   return out;
 }
@@ -142,7 +163,7 @@ export async function runBot(bot, opts) {
       if (why) throw new Refused(`Live run refused: ${why}.`);
     }
     const scope = effectiveScope(bot, opts.dir);
-    if (bot.author && judgeId(judge) === bot.author) {
+    if (bot.author && sameModel(judgeId(judge), bot.author)) {
       throw new Refused(`Run refused: the checker (${judgeId(judge)}) is the same as the author of the proposals. Pick a different judge or model.`);
     }
     journal.append('run-start', { bot: bot.name, mode, judge: judge.name, limits: limitsOf(bot, scope) });
@@ -256,7 +277,7 @@ async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, h
     const block = [];
     if (gates.deterministic) {
       const outbound = checkOutbound(action, item.outbound);
-      const own = runChecks(bot, item, action);
+      const own = await runChecks(bot, item, action);
       flags.push(...outbound.hold, ...own.hold, ...outbound.block, ...own.block);
       block.push(...outbound.block, ...own.block);
     }

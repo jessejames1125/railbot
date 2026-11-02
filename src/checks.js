@@ -7,9 +7,11 @@ const pick = (obj, path) => String(path).split('.').reduce((v, k) => (v == null 
 /** Blocks a message to anyone on an opt-out list. The list is read on every check. */
 export function notOptedOut(getList, field = 'action.to') {
   return (item) => {
-    const to = String(pick(item, field) ?? '').trim().toLowerCase();
+    const value = pick(item, field);
+    const to = (Array.isArray(value) ? value : [value]).map((s) => String(s ?? '').trim().toLowerCase()).filter(Boolean);
     const list = new Set([...(typeof getList === 'function' ? getList() : getList)].map((s) => String(s).trim().toLowerCase()));
-    return to && list.has(to) ? { block: `${to} opted out` } : null;
+    const gone = to.filter((t) => list.has(t));
+    return gone.length ? { block: `${gone.join(', ')} opted out` } : null;
   };
 }
 

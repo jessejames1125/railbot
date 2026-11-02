@@ -6,6 +6,8 @@ import { paths, takeLock, writeStop } from './files.js';
 import { foldState } from './state.js';
 
 const AUTOMATIC = new Set(['auto', 'checker']);
+/** Nights an item may fail to be checked before the bot stops. */
+const UNCHECKED_NIGHTS = 3;
 
 /**
  * @param {any} bot from defineBot, with verify(item, ctx) and optionally undo(item, ctx)
@@ -32,6 +34,15 @@ export async function nightly(bot, opts) {
       try {
         why = await bot.verify(item, { read: opts.readTools ?? {}, result: s.result ?? null, mode });
       } catch (e) {
+        // One night offline is fine; an item that can never be checked is not.
+        const nights = journal.events.filter((x) => x.type === 'unchecked' && x.mode === mode && x.id === s.id).length + 1;
+        journal.append('unchecked', { mode, id: s.id, error: e.message, nights });
+        if (nights >= UNCHECKED_NIGHTS) {
+          const reason = `could not be checked on ${nights} nights: ${e.message}`;
+          journal.append('broken', { mode, id: s.id, reason });
+          out.broken.push({ id: s.id, reason, how: gated.undo ?? 'no undo was declared' });
+          continue;
+        }
         out.unchecked.push({ id: s.id, error: e.message });
         ui({ type: 'nightly-unchecked', id: s.id, error: e.message });
         continue;
