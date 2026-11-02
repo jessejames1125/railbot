@@ -133,7 +133,7 @@ More in [docs/writing-a-bot.md](docs/writing-a-bot.md).
   decide which actions happen; they do not contain code.
 - **Untested against real services:** live GitHub writes (only read-only `try` was run),
   the Anthropic API judge, and the CodeRabbit adapter.
-- **Never run on macOS, and CI has never run** (the repository has no remote yet).
+- **CI** passes on Linux, macOS and Windows.
 - **Laws are yours.** Commercial email has rules (US CAN-SPAM: honor opt-outs within 10
   business days, include a postal address); automated hiring tools are regulated in New
   York City, Illinois and Colorado. The templates link the sources. Not legal advice.
