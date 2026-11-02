@@ -1,5 +1,5 @@
 // Where a bot keeps its files, the stop file, the run lock and the live switch.
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { hostname, homedir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 
@@ -50,21 +50,62 @@ function pidAlive(pid) {
 
 export class Busy extends Error {}
 
+/** Creates the lock whole: no other process can ever read a half-written one. */
+function placeLock(file, body) {
+  const tmp = `${file}.${process.pid}.new`;
+  writeFileSync(tmp, body);
+  try {
+    linkSync(tmp, file);
+  } catch (e) {
+    // Some network and removable drives have no hard links.
+    if (e.code === 'EEXIST') throw e;
+    writeFileSync(file, body, { flag: 'wx' });
+  } finally {
+    rmSync(tmp, { force: true });
+  }
+}
+
+/** Clears a dead lock only if it is still the one we looked at. */
+function clearDeadLock(file, seen) {
+  const grave = `${file}.${process.pid}.dead`;
+  try {
+    renameSync(file, grave);
+  } catch (e) {
+    if (e.code === 'ENOENT') return;
+    throw e;
+  }
+  const moved = readFileSync(grave, 'utf8');
+  if (moved !== seen) {
+    try {
+      linkSync(grave, file);
+    } finally {
+      rmSync(grave, { force: true });
+    }
+    return;
+  }
+  rmSync(grave, { force: true });
+}
+
 /** One writer per bot. A dead process's lock is taken over, a live one's is not. */
 export function takeLock(file, what = 'run') {
   mkdirSync(dirname(file), { recursive: true });
   const body = JSON.stringify({ pid: process.pid, host: hostname(), what, at: new Date().toISOString() });
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      writeFileSync(file, body, { flag: 'wx' });
-      return () => rmSync(file, { force: true });
+      placeLock(file, body);
+      return () => {
+        // Only ever removes our own.
+        if (existsSync(file) && readFileSync(file, 'utf8') === body) rmSync(file, { force: true });
+      };
     } catch (e) {
       if (e.code !== 'EEXIST') throw e;
+      let text = '';
       let held = null;
       try {
-        held = JSON.parse(readFileSync(file, 'utf8'));
+        text = readFileSync(file, 'utf8');
+        held = JSON.parse(text);
       } catch {
-        // Unreadable means it was torn by a crash at the moment of writing.
+        // Unreadable means an older crash tore it.
       }
       if (held && held.host === hostname() && pidAlive(held.pid)) {
         throw new Busy(`Another ${held.what} of this bot is in progress (process ${held.pid}). Wait for it to finish.`);
@@ -72,7 +113,7 @@ export function takeLock(file, what = 'run') {
       if (held && held.host !== hostname()) {
         throw new Busy(`Another machine holds this bot's lock (${held.host}). Delete ${file} only if you are sure it is gone.`);
       }
-      rmSync(file, { force: true });
+      clearDeadLock(file, text);
     }
   }
   throw new Busy(`Could not take the lock at ${file}.`);

@@ -1,12 +1,13 @@
 // Rail: state on disk survives a crash, and an action never happens twice.
 import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { approveAll, item, realishJudge, switchOn, tempDir, testBot } from './helpers.js';
 import { runBot } from '../src/engine.js';
+import { takeLock } from '../src/files.js';
 import { readJournal } from '../src/journal.js';
 import { resolveItem, reopenItem } from '../src/cli-actions.js';
 
@@ -116,4 +117,25 @@ test('a torn last line does not lose the item or repeat it', (t) => {
   const rerun = crash(dir, 'none');
   assert.equal(rerun.status, 0, rerun.stderr);
   assert.deepEqual(effects(dir), ['sent:first', 'sent:second']);
+});
+
+test('releasing a lock leaves one that belongs to someone else', (t) => {
+  const dir = tempDir(t);
+  const file = join(dir, 'lock');
+  const release = takeLock(file, 'run');
+  writeFileSync(file, JSON.stringify({ pid: 999999, host: 'other', what: 'run' }));
+  release();
+  assert.equal(existsSync(file), true);
+});
+
+test('taking a lock leaves nothing else behind, and an unreadable one is cleared', (t) => {
+  const dir = tempDir(t);
+  const file = join(dir, 'lock');
+  writeFileSync(file, 'torn');
+  const release = takeLock(file, 'run');
+  assert.equal(JSON.parse(readFileSync(file, 'utf8')).pid, process.pid);
+  assert.deepEqual(readdirSync(dir), ['lock']);
+  assert.throws(() => takeLock(file, 'run'), /in progress/);
+  release();
+  assert.deepEqual(readdirSync(dir), []);
 });
