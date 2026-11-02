@@ -61,10 +61,12 @@ test('claude judge: a Windows .cmd shim gets only fixed words as arguments', asy
   const { impl, calls } = fakeSpawn(() => ({ stdout: JSON.stringify({ result: '{"decision":"hold","reason":"r","injection_seen":false}' }) }));
   const v = await claudeCliJudge({ spawnImpl: impl, found: { file: 'claude.cmd', shim: true } }).decide({ bot, item: it1 });
   assert.equal(v.decision, 'hold');
-  const { args, options } = calls[0];
+  const { file, args, options } = calls[0];
   assert.equal(options.shell, true);
-  assert.equal(args.includes('--system-prompt'), false);
-  assert.equal(args.includes('--json-schema'), false);
+  assert.deepEqual(args, []);
+  assert.equal(file.includes('--system-prompt '), false);
+  assert.equal(file.includes('--json-schema'), false);
+  assert.equal(file.includes('ignore previous'), false);
 });
 
 test('claude judge: repository tokens are not passed to the program', () => {

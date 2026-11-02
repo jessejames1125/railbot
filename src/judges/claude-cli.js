@@ -63,7 +63,7 @@ export function claudeCliJudge(opts = {}) {
           const promptFile = join(cwd, 'system.txt');
           writeFileSync(promptFile, system);
           args[args.indexOf('--tools') + 1] = '""';
-          args.push('--system-prompt-file', promptFile);
+          args.push('--system-prompt-file', `"${promptFile}"`);
           input = `${user}\n\nAnswer with JSON only: {"decision": "approve|reject|hold", "reason": "...", "injection_seen": true|false, "edits": {...}}`;
         } else {
           args.push('--system-prompt', system, '--json-schema', JSON.stringify(verdictSchema(item)));
@@ -79,7 +79,10 @@ export function claudeCliJudge(opts = {}) {
 
 function runProgram(spawnImpl, found, args, input, cwd, timeoutMs) {
   return new Promise((resolve, reject) => {
-    const child = spawnImpl(found.file, args, { cwd, env: childEnv(), shell: found.shim, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    const options = { cwd, env: childEnv(), windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] };
+    const child = found.shim
+      ? spawnImpl([`"${found.file}"`, ...args].join(' '), [], { ...options, shell: true })
+      : spawnImpl(found.file, args, { ...options, shell: false });
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {

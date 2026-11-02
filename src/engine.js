@@ -94,10 +94,11 @@ export async function runBot(bot, opts) {
   const release = takeLock(p.lock, 'run');
   const onExit = () => release();
   process.once('exit', onExit);
-  const summary = { mode, judge: judge.name, stopped: null, proposed: 0, skipped: 0, items: [], sent: 0, limit: null, inDoubt: [] };
+  const summary = { mode, judge: judge.name, stopped: null, proposed: 0, skipped: 0, items: [], currentIds: [], sent: 0, limit: null, inDoubt: [] };
 
+  let journal;
   try {
-    const journal = new Journal(p.journal, { clock });
+    journal = new Journal(p.journal, { clock });
     if (mode === 'live') {
       const why = liveRefusal(bot, judge, p, opts.attended === true);
       if (why) throw new Refused(`Live run refused: ${why}.`);
@@ -126,6 +127,9 @@ export async function runBot(bot, opts) {
     summary.items = [...final.values()].filter((s) => s.mode === mode);
     journal.append('run-end', { mode, sent: summary.sent, stopped: summary.stopped });
     return summary;
+  } catch (e) {
+    if (journal && !(e instanceof Refused)) journal.append('run-failed', { mode, error: e.message });
+    throw e;
   } finally {
     process.removeListener('exit', onExit);
     release();
@@ -146,6 +150,7 @@ async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, h
       ui({ type: 'invalid', error: e.message });
       continue;
     }
+    summary.currentIds.push(item.id);
     const state = foldState(journal.events).get(stateKey(mode, item.id));
     const hash = hashJson({ action: item.action, untrusted: item.untrusted, facts: item.facts });
     // An id that has reached an end state is never acted on again, whatever the text says now.

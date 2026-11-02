@@ -94,6 +94,9 @@ export class Journal {
 
   /** Write one event and force it to disk before returning. */
   append(type, fields = {}) {
+    for (const reserved of ['seq', 'ts', 'type', 'prev', 'hash']) {
+      if (reserved in fields) throw new Error(`"${reserved}" is reserved in the journal`);
+    }
     const rec = { seq: this.seq + 1, ts: this.clock().toISOString(), type, ...fields, prev: this.lastHash };
     const json = JSON.stringify(rec);
     const hash = hashOf(json);
