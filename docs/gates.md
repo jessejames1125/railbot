@@ -53,12 +53,17 @@ Some subjects always reach a person: `employment` (hiring, pay, discipline, some
 job), `refund`, `account`, `legal-safety`, `public-post`. Mark an action with
 `about: '<subject>'`. The bot cannot declare it below high, `scope.json` cannot lower it
 (the attempt is kept in the log and printed as a `LOCKED` warning), and an item can add
-a lock to itself but never remove one. Changing the list means editing `src/scope.js`.
+a lock to itself but never remove one. An item's subject is matched however it is
+spelled (`Refund`, `refunds`); one railbot does not know goes to a person. A lock follows the
+action type or the item's own `about`: a refund asked for inside an ordinary reply is locked
+only if your bot tags it, so tag by what the message asks for. Changing the list means
+editing `src/scope.js`.
 
 ## Deterministic checks
 
 `checks: [...]` is a list of plain functions. Each returns nothing, `{ hold }` to ask a
-person, or `{ block }` to stop the item. A check that throws blocks. Ready-made ones in
+person, or `{ block }` to stop the item. A check may be async. A check that throws, or
+answers anything else (`false`, `{}`), blocks. Ready-made ones in
 `railbot`: `notOptedOut`, `atMost`, `protectedPaths`, `smallDiff`, `mustBeTrue`,
 `claimsListed`.
 
