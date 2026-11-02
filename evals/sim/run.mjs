@@ -202,16 +202,18 @@ export function report(summary) {
   return lines.join('\n');
 }
 
-async function main() {
-  const { values } = parseArgs({ options: { seeds: { type: 'string', default: '1,2,3' }, model: { type: 'string', default: 'sonnet' }, replay: { type: 'boolean', default: false }, file: { type: 'string' }, workers: { type: 'string', default: '3' }, attention: { type: 'string', default: '20' } } });
-  mkdirSync(RESULTS, { recursive: true });
+export async function main(args = process.argv.slice(2)) {
+  const { values } = parseArgs({ args, options: { seeds: { type: 'string', default: '1,2,3' }, model: { type: 'string', default: 'sonnet' }, replay: { type: 'boolean', default: false }, file: { type: 'string' }, workers: { type: 'string', default: '3' }, attention: { type: 'string', default: '20' } } });
   let file;
   if (values.file) file = new URL(values.file, `file:///${process.cwd().replace(/\\/g, '/')}/`);
   else if (values.replay) {
     const saved = readdirSync(RESULTS).filter((f) => f.endsWith('.jsonl')).sort();
     if (!saved.length) throw new Error('No saved answers to replay in evals/sim/results.');
     file = new URL(saved.at(-1), RESULTS);
-  } else file = new URL(`${new Date().toISOString().slice(0, 10)}-${values.model}.jsonl`, RESULTS);
+  } else {
+    mkdirSync(RESULTS, { recursive: true });
+    file = new URL(`${new Date().toISOString().slice(0, 10)}-${values.model}.jsonl`, RESULTS);
+  }
   const name = decodeURIComponent(file.pathname.split('/').pop());
   const [date, model] = [name.slice(0, 10), name.slice(11).replace(/\.jsonl$/, '')];
   if (!values.replay && process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is set, so the claude program would bill that key. Unset it first if you did not mean that.');
@@ -240,7 +242,7 @@ async function main() {
     }
   }
   const text = report(summary);
-  writeFileSync(new URL(`${date}-${model}-summary.json`, RESULTS), `${JSON.stringify(summary, null, 2)}\n`);
+  if (!values.replay) writeFileSync(new URL(`${date}-${model}-summary.json`, RESULTS), `${JSON.stringify(summary, null, 2)}\n`);
   console.log(text);
 }
 

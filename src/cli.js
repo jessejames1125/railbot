@@ -24,10 +24,11 @@ import { safeForTerminal as safe } from './untrusted.js';
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const say = (line = '') => console.log(line);
 
-const HELP = `railbot ${VERSION}: AI bots with rails. Practice mode unless you say otherwise.
+const HELP = `railbot ${VERSION}: AI bots that work inside a scope you set, gated by code checks, a second AI, and you. Practice mode unless you say otherwise.
 
 Start here
   railbot try owner/repo           Run the built-in bots read-only on a public repo.
+  railbot sim                      Replay the simulated company: five ways to gate its work.
   railbot new my-bot               Make a bot folder. Then: cd my-bot, npm start.
     --bot inbox|hr|sales|marketing|product|sdlc    (starting templates)
     --bot stale-prs|issue-triage|release-notes --repo owner/repo
@@ -62,6 +63,7 @@ const OPTIONS = {
   set: { type: 'string', multiple: true }, record: { type: 'string' }, bot: { type: 'string' }, max: { type: 'string' },
   describe: { type: 'string' }, 'build-with': { type: 'string' }, 'railbot-spec': { type: 'string' }, 'no-install': { type: 'boolean' },
   verify: { type: 'boolean' }, item: { type: 'string' }, json: { type: 'boolean' }, all: { type: 'boolean' }, 'idle-days': { type: 'string' },
+  seeds: { type: 'string' },
   help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' },
 };
 
@@ -408,6 +410,12 @@ async function main() {
     case 'queue': return cmdQueue(values);
     case 'stats': return cmdStats(values);
     case 'nightly': return cmdNightly(args, values);
+    case 'sim': {
+      // The simulated company. Replays the saved checker answers unless --live is given.
+      const { main: sim } = await import('../evals/sim/run.mjs');
+      await sim(values.live ? ['--seeds', values.seeds ?? '1,2,3', '--model', values.model ?? 'sonnet'] : ['--replay']);
+      return 0;
+    }
     case 'audit': return cmdAudit(values);
     case 'check': return cmdCheck(args, values);
     case 'doctor': return cmdDoctor();

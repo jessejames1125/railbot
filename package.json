@@ -1,7 +1,7 @@
 {
   "name": "railbot",
   "version": "0.1.0",
-  "description": "Starter kit for AI bots you can leave running: practice by default, human approval, hard send limits, zero dependencies.",
+  "description": "AI bots that work inside a scope you set, gated by code checks, a second AI, and you.",
   "license": "MIT",
   "author": "jessejames1125",
   "type": "module",
@@ -17,6 +17,8 @@
   "files": [
     "src/",
     "templates/",
+    "evals/sim/*.mjs",
+    "evals/sim/results/",
     "LICENSE",
     "README.md"
   ],

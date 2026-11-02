@@ -1,7 +1,7 @@
 {
   "name": "create-railbot",
   "version": "0.1.0",
-  "description": "Make a new railbot project: npx create-railbot my-bot, then npm start.",
+  "description": "AI bots that work inside a scope you set, gated by code checks, a second AI, and you. Make a new railbot project: npx create-railbot my-bot.",
   "license": "MIT",
   "author": "jessejames1125",
   "type": "module",
