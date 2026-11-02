@@ -73,11 +73,11 @@ export function standIn(day, attention) {
 }
 
 /** Runs one configuration over one day and scores it from the journals. */
-export async function runDay({ day, config, judge, attention = 20 }) {
+export async function runDay({ day, config, judge, attention = 20, version = 1 }) {
   const gates = CONFIGS[config];
   const root = mkdtempSync(join(tmpdir(), 'railbot-sim-'));
   try {
-    const bots = BOT_NAMES.map((name) => makeBot(name, day));
+    const bots = BOT_NAMES.map((name) => makeBot(name, day, version));
     const person = standIn(day, attention);
     const opts = (bot, extra = {}) => ({ dir: join(root, bot.name), judge, gates, ui: () => {}, ...extra });
     for (const bot of bots) {
@@ -202,31 +202,25 @@ export function report(summary) {
   return lines.join('\n');
 }
 
-export async function main(args = process.argv.slice(2)) {
-  const { values } = parseArgs({ args, options: { seeds: { type: 'string', default: '1,2,3' }, model: { type: 'string', default: 'sonnet' }, replay: { type: 'boolean', default: false }, file: { type: 'string' }, workers: { type: 'string', default: '3' }, attention: { type: 'string', default: '20' } } });
-  let file;
-  if (values.file) file = new URL(values.file, `file:///${process.cwd().replace(/\\/g, '/')}/`);
-  else if (values.replay) {
-    const saved = readdirSync(RESULTS).filter((f) => f.endsWith('.jsonl')).sort();
-    if (!saved.length) throw new Error('No saved answers to replay in evals/sim/results.');
-    file = new URL(saved.at(-1), RESULTS);
-  } else {
-    mkdirSync(RESULTS, { recursive: true });
-    file = new URL(`${new Date().toISOString().slice(0, 10)}-${values.model}.jsonl`, RESULTS);
-  }
-  const name = decodeURIComponent(file.pathname.split('/').pop());
-  const [date, model] = [name.slice(0, 10), name.slice(11).replace(/\.jsonl$/, '')];
-  if (!values.replay && process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is set, so the claude program would bill that key. Unset it first if you did not mean that.');
+/** Reads a results file name: <date>-<model>[-<tag>].jsonl, where a tag of v2 means generator version 2. */
+export function describeFile(name) {
+  const [model, ...tag] = name.slice(11).replace(/\.jsonl$/, '').split('-');
+  const version = Number(/v(\d+)/.exec(tag.join('-'))?.[1] ?? 1);
+  return { date: name.slice(0, 10), model, tag: tag.join('-'), version, stem: name.replace(/\.jsonl$/, '') };
+}
 
+async function scoreFile(file, values) {
+  const name = decodeURIComponent(file.pathname.split('/').pop());
+  const { date, model, tag, version, stem } = describeFile(name);
   const seeds = values.seeds.split(',').map(Number);
   const attention = Number(values.attention);
   const saved = loadVerdicts(file);
-  const summary = { date, model, seeds, attention, sensitivity: [10, 20, 50, null], runs: {}, void: [], failedCalls: 0, actions: 100, faults: 14 };
+  const summary = { date, model, tag, version, seeds, attention, sensitivity: [10, 20, 50, null], runs: {}, void: [], failedCalls: 0, actions: 100, faults: 14 };
   for (const seed of seeds) {
-    const day = workday(seed);
+    const day = workday(seed, version);
     const verdicts = new Map([...saved].filter(([id]) => id.startsWith(`s${seed}-`)).map(([id, row]) => [id, row]));
     if (!values.replay) {
-      const botsByName = Object.fromEntries(BOT_NAMES.map((n) => [n, makeBot(n, day)]));
+      const botsByName = Object.fromEntries(BOT_NAMES.map((n) => [n, makeBot(n, day, version)]));
       console.log(`Seed ${seed}: asking the checker about ${day.filter((a) => !verdicts.get(a.id)?.verdict).length} actions with ${model}.`);
       await ask(day, botsByName, claudeCliJudge({ model }), file, verdicts, Number(values.workers));
     }
@@ -235,15 +229,31 @@ export async function main(args = process.argv.slice(2)) {
     if (failed > day.length / 10) summary.void.push(seed);
     const judge = savedJudge(new Map([...verdicts].filter(([, r]) => r.verdict)), model);
     for (const config of Object.keys(CONFIGS)) {
-      summary.runs[`${config}|${seed}|${attention}`] = await runDay({ day, config, judge, attention });
+      summary.runs[`${config}|${seed}|${attention}`] = await runDay({ day, config, judge, attention, version });
     }
     for (const k of summary.sensitivity) {
-      for (const config of ['both', 'person']) summary.runs[`${config}|${seed}|${k ?? 'all'}`] = await runDay({ day, config, judge, attention: k ?? Infinity });
+      for (const config of ['both', 'person']) summary.runs[`${config}|${seed}|${k ?? 'all'}`] = await runDay({ day, config, judge, attention: k ?? Infinity, version });
     }
   }
-  const text = report(summary);
-  if (!values.replay) writeFileSync(new URL(`${date}-${model}-summary.json`, RESULTS), `${JSON.stringify(summary, null, 2)}\n`);
-  console.log(text);
+  if (!values.replay) writeFileSync(new URL(`${stem}-summary.json`, RESULTS), `${JSON.stringify(summary, null, 2)}\n`);
+  console.log(`\n${stem} (generator version ${version})`);
+  console.log(report(summary));
+  return summary;
+}
+
+export async function main(args = process.argv.slice(2)) {
+  const { values } = parseArgs({ args, options: { seeds: { type: 'string', default: '1,2,3' }, model: { type: 'string', default: 'sonnet' }, tag: { type: 'string', default: 'v2' }, replay: { type: 'boolean', default: false }, file: { type: 'string' }, workers: { type: 'string', default: '3' }, attention: { type: 'string', default: '20' } } });
+  if (!values.replay && process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is set, so the claude program would bill that key. Unset it first if you did not mean that.');
+  if (values.file) return scoreFile(new URL(values.file, `file:///${process.cwd().replace(/\\/g, '/')}/`), values);
+  if (values.replay) {
+    // Every saved run, oldest first, so a later run never hides an earlier one.
+    const saved = existsSync(RESULTS) ? readdirSync(RESULTS).filter((f) => f.endsWith('.jsonl')).sort() : [];
+    if (!saved.length) throw new Error('No saved answers to replay in evals/sim/results.');
+    for (const f of saved) await scoreFile(new URL(f, RESULTS), values);
+    return;
+  }
+  mkdirSync(RESULTS, { recursive: true });
+  return scoreFile(new URL(`${new Date().toISOString().slice(0, 10)}-${values.model}${values.tag ? `-${values.tag}` : ''}.jsonl`, RESULTS), values);
 }
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').slice(-3).join('/'))) await main();

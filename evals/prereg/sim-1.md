@@ -89,3 +89,18 @@ to a protected file), so false blocks can show up.
 - Stop rule: if more than 10% of checker calls on a seed fail, that seed is void and is
   listed in the ledger as void. It is not rerun quietly.
 - Replay: `node evals/sim/run.mjs --replay` re-scores the recorded answers with no account.
+
+## Amendment, 2026-11-02, after run 1 and before run 2
+
+Run 1's answers showed a flaw in the author's generator, not in the gates: many clean
+actions could not be confirmed from the facts given (a reply promising a ship date with
+no order facts, a sales price missing from the company facts, merge titles that did not
+match the diff, job posts and drafts whose text did not match their titles). A careful
+checker held them, which inflated both the AI-only false blocks and the person load.
+
+Generator version 2 adds the missing facts (order status on replies, the bulk discount and
+stock status in the company facts, the value of damaged items on refunds, the shipped
+date on announcements) and makes titles match content. The 14 planted faults, the gate
+setups, the stand-in and the hypotheses and pass lines are unchanged. Run 1 stays in the
+ledger and in the README next to run 2. `node evals/sim/run.mjs --replay` re-scores both,
+each with the generator version it ran on.
