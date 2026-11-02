@@ -1,0 +1,1 @@
+["vitejs/vite", "fastify/fastify", "prettier/prettier", "tailwindlabs/tailwindcss", "denoland/deno", "astral-sh/uv"]

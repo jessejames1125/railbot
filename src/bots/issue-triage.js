@@ -5,7 +5,7 @@ import { defineBot } from '../engine.js';
 import { buildIndex, first, tokens } from './lib.js';
 
 // Workflow labels say where an issue is in a process, not what it is about.
-const WORKFLOW = /^(needs?[\s:_-]|triage|untriaged|pending|new$|stale|wontfix|won't fix|invalid|duplicate|good first issue|help wanted|awaiting|waiting|in[\s-]progress|confirmed|accepted|p[0-9]\b|priority|status[:/]|closed|released|cla|size[:/]|hacktoberfest|no[\s-]?stale|autorelease|has[\s:-])/i;
+export const WORKFLOW = /^(needs?[\s:_-]|triage|untriaged|pending|new$|stale|wontfix|won't fix|invalid|duplicate|good first issue|help wanted|awaiting|waiting|in[\s-]progress|confirmed|accepted|p[0-9]\b|priority|status[:/]|closed|released|cla|size[:/]|hacktoberfest|no[\s-]?stale|autorelease|has[\s:-])/i;
 const NEEDS_TRIAGE = /^(needs?[\s:_-]*(triage|review)|triage|untriaged|pending[\s-]triage|new)$/i;
 
 const KIND_WORDS = [
@@ -71,6 +71,35 @@ function missingInfo(issue) {
   return missing.length ? missing : null;
 }
 
+/** The proposal for one issue. Exported so the label eval scores exactly what the bot would send. */
+export function triageItem(issue, repo, usable, index) {
+  const suggested = suggestLabels(issue, usable, index);
+  const near = index.similar(issue, { limit: 1, exclude: issue.number })[0];
+  const duplicate = near && near.score >= 0.45 ? { number: near.doc.number, state: near.doc.state, score: Number(near.score.toFixed(2)) } : null;
+  const missing = missingInfo(issue);
+  const sentences = [];
+  if (duplicate) sentences.push(`This looks close to #${duplicate.number}. If it is the same problem, please add your details there.`);
+  if (missing) sentences.push(`To help reproduce this, could you add ${missing.join(' and ')}?`);
+  const comment = sentences.join(' ');
+  const names = suggested.map((s) => s.name);
+  return {
+    id: `issue-${issue.number}-triage`,
+    title: `#${issue.number} ${first(issue.title, 70)}`,
+    action: { type: 'github.triage', repo, number: issue.number, labels: names, comment },
+    facts: {
+      issue: issue.number, url: issue.html_url, reporter: issue.user?.login, reporterRole: issue.author_association, comments: issue.comments,
+      suggestedBecause: suggested, likelyDuplicate: duplicate, missing, allLabels: [...usable],
+    },
+    untrusted: { title: issue.title, body: first(issue.body, 3000) },
+    editable: { labels: { type: 'subset', of: [...usable] }, comment: { type: 'text', maxChars: 500 } },
+    outbound: { fields: ['comment'], allowMentions: [], allowHosts: [], maxChars: 500 },
+    rulesVerdict: names.length
+      ? { decision: 'approve', reason: `${names[0]}: ${suggested[0].why}.` }
+      : { decision: 'hold', reason: 'No label fits with enough confidence, so a person should look.' },
+    preview: `Add labels [${names.join(', ')}] to ${repo}#${issue.number}${comment ? ` and comment:\n${comment}` : ''}`,
+  };
+}
+
 export default defineBot({
   name: 'issue-triage',
   limits: { perRun: 10, perDay: 30 },
@@ -98,33 +127,7 @@ Never promise a fix or a timeline, never add links, and never mention people.`,
     const waiting = open.filter(looksUnlabeled);
     ctx.log(`${open.length} open issues read, ${waiting.length} with no real label, looking at the newest ${Math.min(max, waiting.length)}.`);
 
-    return waiting.slice(0, max).map((issue) => {
-      const suggested = suggestLabels(issue, usable, index);
-      const near = index.similar(issue, { limit: 1, exclude: issue.number })[0];
-      const duplicate = near && near.score >= 0.45 ? { number: near.doc.number, state: near.doc.state, score: Number(near.score.toFixed(2)) } : null;
-      const missing = missingInfo(issue);
-      const sentences = [];
-      if (duplicate) sentences.push(`This looks close to #${duplicate.number}. If it is the same problem, please add your details there.`);
-      if (missing) sentences.push(`To help reproduce this, could you add ${missing.join(' and ')}?`);
-      const comment = sentences.join(' ');
-      const names = suggested.map((s) => s.name);
-      return {
-        id: `issue-${issue.number}-triage`,
-        title: `#${issue.number} ${first(issue.title, 70)}`,
-        action: { type: 'github.triage', repo, number: issue.number, labels: names, comment },
-        facts: {
-          issue: issue.number, url: issue.html_url, reporter: issue.user?.login, reporterRole: issue.author_association, comments: issue.comments,
-          suggestedBecause: suggested, likelyDuplicate: duplicate, missing, allLabels: [...usable],
-        },
-        untrusted: { title: issue.title, body: first(issue.body, 3000) },
-        editable: { labels: { type: 'subset', of: [...usable] }, comment: { type: 'text', maxChars: 500 } },
-        outbound: { fields: ['comment'], allowMentions: [], allowHosts: [], maxChars: 500 },
-        rulesVerdict: names.length
-          ? { decision: 'approve', reason: `${names[0]}: ${suggested[0].why}.` }
-          : { decision: 'hold', reason: 'No label fits with enough confidence, so a person should look.' },
-        preview: `Add labels [${names.join(', ')}] to ${repo}#${issue.number}${comment ? ` and comment:\n${comment}` : ''}`,
-      };
-    });
+    return waiting.slice(0, max).map((issue) => triageItem(issue, repo, usable, index));
   },
 
   summary: (e) => {
