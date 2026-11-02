@@ -52,7 +52,7 @@ test('stale PRs: reads who it is waiting on from the timeline', () => {
   assert.equal(waitingDays(t, 100), 20);
 });
 
-test('stale PRs: says how long it has waited, not just the last touch', () => {
+test('stale PRs: says how long it has really waited, which can far exceed the last touch', () => {
   assert.equal(waitingDays({ waitingOn: 'first-review' }, 300), 300);
   assert.equal(waitingDays({ waitingOn: 'author', changesRequestedDays: 12 }, 300), 12);
 });
