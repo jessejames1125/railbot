@@ -4,7 +4,7 @@ Report a hole through GitHub's private "Report a vulnerability" button on the Se
 
 These count as vulnerabilities, even with a good reason:
 
-- An item reaching `act()` without a real judge's approve and a person's yes.
+- An item reaching `act()` without a person's yes, past a judge's reject without a person reopening it, or in practice mode.
 - A send past a limit, or a repeated send after a crash or a rerun.
 - Outside text changing an action's target, type or limits, or skipping approval.
 - A log edit that `railbot audit --verify` doesn't report.

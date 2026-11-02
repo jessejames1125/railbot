@@ -69,6 +69,6 @@ The last one has a real judge read your items and saves the verdicts, so anyone 
 npx railbot new my-bot --describe "what it should do" --build-with claude
 ```
 
-This has your `claude` program rewrite `bot.js`, limited to reading and editing files in that folder, then runs `railbot check`. Or, in Claude Code, install the plugin in `packages/claude-plugin` and ask for a bot in plain English. The plugin won't run `go-live` for you: that step stays with a person at a terminal.
+This has your `claude` program rewrite `bot.js` with its restricted mode and file tools only, so it can't run commands or leave that folder, then runs `railbot check`. Or, in Claude Code, install the plugin in `packages/claude-plugin` and ask for a bot in plain English. The plugin won't run `go-live` for you: that step stays with a person at a terminal.
 
 There is no MCP server. An MCP tool that approves actions would be a way around the approval step, and everything else is already a command an agent can run.
