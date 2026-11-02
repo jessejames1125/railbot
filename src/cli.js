@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { defineBot, runBot, Refused } from './engine.js';
 import { goLive, goPractice, reopenItem, resolveItem } from './cli-actions.js';
-import { Busy, paths, stopReason, takeLock, writeStop } from './files.js';
+import { Busy, paths, shortPath, stopReason, takeLock, writeStop } from './files.js';
 import { parseRepo, readGitHub, writeGitHub } from './github.js';
 import { Journal, JournalCorrupt, readJournal } from './journal.js';
 import { makeJudge, recordingJudge } from './judges/index.js';
@@ -16,7 +16,7 @@ import { findClaude } from './judges/claude-cli.js';
 import { scaffold, TEMPLATES } from './scaffold.js';
 import { foldState } from './state.js';
 import { BUILT_IN, tryRepo } from './try.js';
-import { bold, dim, eventPrinter, green, red, terminalApprover, yellow } from './ui.js';
+import { bold, dim, eventPrinter, green, red, terminalApprover, wrap, yellow } from './ui.js';
 import { safeForTerminal as safe } from './untrusted.js';
 
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
@@ -110,7 +110,7 @@ function footer(summary, p) {
     say(red(`In doubt after a crash, and not retried: ${summary.inDoubt.map(safe).join(', ')}.`));
     say(`Check by hand, then run: railbot resolve ${safe(summary.inDoubt[0])} done (or failed)`);
   }
-  say(dim(`Audit log: ${p.journal}`));
+  say(dim(`Audit log: ${shortPath(p.journal)}`));
 }
 
 async function cmdRun(args, values) {
@@ -131,15 +131,16 @@ async function cmdRun(args, values) {
 
   const attended = Boolean(process.stdin.isTTY);
   say(mode === 'practice'
-    ? `${green('Practice mode.')} Nothing real will happen. Judge: ${judge.name}${judge.source ? dim(` (${judge.source})`) : ''}. Limits: ${bot.limits.perRun} a run, ${bot.limits.perDay} a day.`
+    ? `${green('Practice mode.')} Nothing real will happen.\nJudge: ${judge.name}${judge.source ? dim(` (${judge.source})`) : ''}. Limits: ${bot.limits.perRun} a run, ${bot.limits.perDay} a day.`
     : `${red('LIVE RUN.')} Approved items will really happen. Judge: ${judge.name}. Limits: ${bot.limits.perRun} a run, ${bot.limits.perDay} a day.`);
+  say('');
   const approver = attended ? terminalApprover() : null;
   try {
     const summary = await runBot(bot, {
       dir, mode, judge, params, attended, approver,
       readTools: { github: readGitHub() },
       writeTools: mode === 'live' ? { github: writeGitHub() } : {},
-      ui: eventPrinter(say),
+      ui: eventPrinter(say, { reasons: approver ? 'closed' : 'all' }),
     });
     footer(summary, p);
     return summary.stopped ? 3 : 0;
@@ -205,7 +206,7 @@ function cmdAudit(values) {
   const read = readJournal(file);
   if (values.verify) {
     if (read.problems.length) {
-      say(red(`FAILED: ${read.problems.length} problem(s) in ${file}`));
+      say(red(`FAILED: ${read.problems.length} problem(s) in ${shortPath(file)}`));
       for (const problem of read.problems) say(`  ${problem}`);
       return 1;
     }
@@ -220,8 +221,9 @@ function cmdAudit(values) {
       say(JSON.stringify(e));
       continue;
     }
-    const detail = e.verdict ? `${e.verdict.decision}: ${safe(e.verdict.reason)}` : safe(e.note ?? e.reason ?? e.error ?? (e.wouldDo ? `would do: ${String(e.wouldDo).split('\n')[0]}` : ''));
-    say(`${dim(e.ts)} ${e.type.padEnd(15)} ${safe(e.id ?? '').padEnd(24)} ${detail}`);
+    const detail = e.verdict ? `${e.verdict.decision}: ${safe(e.verdict.reason)}` : e.type === 'closed' ? safe(e.status) : safe(e.note ?? e.reason ?? e.error ?? (e.wouldDo ? `would do: ${String(e.wouldDo).split('\n')[0]}` : ''));
+    say(`${dim(e.ts.slice(0, 19))} ${e.type.padEnd(14)} ${values.item ? '' : `${safe(e.id ?? '')} `}${wrap(detail, 34, { label: 34 })}`);
+    for (const flag of e.flags ?? []) say(`${' '.repeat(34)}${red('flag:')} ${safe(flag)}`);
   }
   return 0;
 }
@@ -251,11 +253,11 @@ function cmdStop(args, values, resume = false) {
   if (resume) {
     rmSync(file, { force: true });
     const still = stopReason(p);
-    say(still ? yellow(`Removed ${file}, but still stopped: ${still}`) : green('Stop file removed.'));
+    say(still ? yellow(`Removed ${shortPath(file)}, but still stopped: ${still}`) : green('Stop file removed.'));
     return 0;
   }
   writeStop(file, args.join(' '));
-  say(red(`Stopped. ${file} now exists, and ${values.all ? 'every bot on this machine' : 'every bot in this folder'} halts at its next step.`));
+  say(red(`Stopped. ${shortPath(file)} now exists, and ${values.all ? 'every bot on this machine' : 'every bot in this folder'} halts at its next step.`));
   return 0;
 }
 
@@ -344,7 +346,7 @@ async function cmdNew(args, values) {
     say(`Saved your description in BOT.md. In Claude Code, run /railbot:new-bot here, or add --build-with claude next time.`);
   }
   say('');
-  say(green(`Made ${made.dir}`));
+  say(green(`Made ${shortPath(made.dir)}`));
   say(`  cd ${target}`);
   if (!made.installed) say('  npm install');
   say('  npm start');

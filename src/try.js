@@ -3,8 +3,9 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { runBot } from './engine.js';
+import { shortPath } from './files.js';
 import { parseRepo, readGitHub } from './github.js';
-import { bold, describeAction, dim, green, red, yellow } from './ui.js';
+import { bold, describeAction, dim, green, red, wrap, yellow } from './ui.js';
 import { safeForTerminal as safe } from './untrusted.js';
 import staleBot from './bots/stale-prs.js';
 import triageBot from './bots/issue-triage.js';
@@ -28,9 +29,9 @@ function printBot(write, bot, result, logs) {
     write('');
     write(`  ${bold(safe(s.item.title))}`);
     if (s.item.facts?.url) write(dim(`  ${safe(s.item.facts.url)}`));
-    if (bot.summary) write(`  ${safe(bot.summary(s))}`);
+    if (bot.summary) write(`  ${wrap(safe(bot.summary(s)), 2)}`);
     const decision = s.verdict?.decision ?? 'hold';
-    write(`  ${(paint[decision] ?? yellow)(decision)}: ${safe(s.verdict?.reason ?? '')}`);
+    write(`  ${(paint[decision] ?? yellow)(decision)}: ${wrap(safe(s.verdict?.reason ?? ''), 2, { label: 9 })}`);
     for (const flag of s.flags ?? []) write(`  ${red('flag:')} ${safe(flag)}`);
     if (decision !== 'reject') {
       const text = s.action?.body ?? (s.action?.comment ? `Comment: ${s.action.comment}` : null);
@@ -82,7 +83,7 @@ export async function tryRepo(opts) {
   const failed = results.filter((r) => r.result.error);
   write('');
   write(green('Nothing was sent.') + dim(`  ${((Date.now() - started) / 1000).toFixed(1)}s, ${github.stats.requests} GitHub requests${github.stats.remaining !== null ? `, ${github.stats.remaining} left this hour` : ''}.`));
-  write(dim(`Audit log for each bot: ${join(dir, '.railbot')}`));
+  write(dim(`Audit log for each bot: ${shortPath(join(dir, '.railbot'))}`));
   write(`Keep one: ${bold('npx create-railbot my-bot --bot stale-prs --repo ' + parsed.full)}`);
   return { dir, results, failed: failed.length };
 }

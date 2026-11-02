@@ -11,28 +11,48 @@ export const yellow = paint('33');
 export const dim = paint('2');
 export const bold = paint('1');
 
-const DECISION = { approve: green('approve'), reject: red('reject'), hold: yellow('hold') };
+const paintDecision = { approve: green, reject: red, hold: yellow };
+const decisionWord = (d) => (paintDecision[d] ?? ((x) => x))(String(d).padEnd(7));
+
+/** Wrap on spaces so a long reason doesn't break mid-word. Takes clean text, no colors. */
+export function wrap(text, indent = 0, { width = process.stdout.columns || 100, label = 0 } = {}) {
+  const room = Math.max(30, width - indent - 1);
+  const pad = ' '.repeat(indent);
+  const out = [];
+  for (const para of String(text).split('\n')) {
+    let line = '';
+    for (const word of para.split(' ')) {
+      const used = line.length + (out.length === 0 ? label : 0);
+      if (line && used + word.length + 1 > room) {
+        out.push(line);
+        line = word;
+      } else line = line ? `${line} ${word}` : word;
+    }
+    out.push(line);
+  }
+  return out.map((l, i) => (i === 0 ? l : `${pad}${l}`)).join('\n');
+}
 
 export function describeAction(action) {
   const text = safe(typeof action === 'string' ? action : JSON.stringify(action, null, 2));
-  return text.split('\n').map((l) => `    ${l}`).join('\n');
+  return `    ${wrap(text, 4)}`;
 }
 
-/** @param {(line: string) => void} write */
-export function eventPrinter(write, { quiet = false } = {}) {
+/**
+ * @param {(line: string) => void} write
+ * @param {{ reasons?: 'all'|'closed' }} [opts] with a person about to see each card, only closed items need their reason here
+ */
+export function eventPrinter(write, { reasons = 'all' } = {}) {
+  const quiet = false;
   return (e) => {
     switch (e.type) {
       case 'log':
         if (!quiet) write(dim(safe(e.text)));
         break;
-      case 'proposed':
-        if (!quiet) write(`\n${bold('Proposed')}  ${safe(e.item.title)}`);
-        break;
       case 'judged': {
-        if (quiet) break;
-        const decision = DECISION[e.verdict.decision] ?? e.verdict.decision;
-        write(`  judge     ${decision}: ${safe(e.verdict.reason)}`);
-        for (const flag of e.flags) write(`  ${red('flag')}      ${safe(flag)}`);
+        write(`${decisionWord(e.verdict.decision)} ${safe(e.item.title)}`);
+        if (reasons === 'all' || e.verdict.decision === 'reject') write(`        ${dim(wrap(safe(e.verdict.reason), 8))}`);
+        for (const flag of e.flags) write(`        ${red('flag:')} ${safe(flag)}`);
         break;
       }
       case 'skipped':
@@ -87,7 +107,7 @@ export function terminalApprover(io = {}) {
         mode === 'practice' ? dim('  Practice mode: approving records the answer and sends nothing.') : red('  LIVE: approving this does it for real.'),
         '  It would do:',
         describeAction(entry.item.preview && mode === 'practice' ? entry.item.preview : entry.action),
-        `  Judge (${safe(entry.verdict?.decision ?? 'none')}): ${safe(entry.verdict?.reason ?? '')}`,
+        `  Judge says ${safe(entry.verdict?.decision ?? 'nothing')}: ${wrap(safe(entry.verdict?.reason ?? ''), 2, { label: 22 })}`,
       ];
       for (const flag of entry.flags ?? []) lines.push(`  ${red('Flag:')} ${safe(flag)}`);
       output.write(`${lines.join('\n')}\n`);

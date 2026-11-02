@@ -4,12 +4,13 @@
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, writeSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { shortPath } from './files.js';
 
 const GENESIS = '0'.repeat(64);
 
 export class JournalCorrupt extends Error {
   constructor(file, problems) {
-    super(`The audit log at ${file} fails its check: ${problems[0]}. Refusing to run on it.`);
+    super(`The audit log at ${shortPath(file)} fails its check: ${problems[0]}. Refusing to run on it.`);
     this.problems = problems;
   }
 }

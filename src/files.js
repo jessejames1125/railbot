@@ -1,7 +1,15 @@
 // Where a bot keeps its files, the stop file, the run lock and the live switch.
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { hostname, homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
+
+/** A path for people to read: short, and free of the machine's user folder. */
+export function shortPath(file, cwd = process.cwd()) {
+  const rel = relative(cwd, file);
+  if (!rel.startsWith('..')) return rel || '.';
+  const home = homedir();
+  return file.startsWith(home) ? `~${file.slice(home.length)}` : file;
+}
 
 export const paths = (dir, botName) => {
   const state = join(dir, '.railbot', botName);
@@ -20,7 +28,7 @@ export function stopReason(p) {
   for (const file of [p.stop, p.globalStop]) {
     if (existsSync(file)) {
       const words = readFileSync(file, 'utf8').trim();
-      return `${file} exists${words ? `: ${words}` : ''}`;
+      return `${shortPath(file)} exists${words ? `: ${words}` : ''}`;
     }
   }
   return null;

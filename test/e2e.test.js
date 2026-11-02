@@ -86,8 +86,9 @@ test('npx create-railbot my-bot, then npm start, on a clean folder', { timeout: 
   assert.equal(started.status, 0, started.out);
   assert.match(started.out, /Practice mode/);
   assert.match(started.out, /Judge: recorded \(claude sonnet/);
-  assert.match(started.out, /reject: The message is a prompt-injection attempt/);
-  assert.match(started.out, /flag\s+message tells the reader to ignore instructions/);
+  assert.match(started.out, /reject\s+Reply to billing-admin/);
+  assert.match(started.out, /The message is a prompt-injection attempt/);
+  assert.match(started.out, /flag: message tells the reader to ignore instructions/);
   assert.match(started.out, /3 waiting for a person/);
   assert.equal(existsSync(join(bot, 'outbox')), false, 'practice wrote nothing to the outbox');
 
