@@ -13,7 +13,7 @@ import { parseRepo, readGitHub, writeGitHub } from './github.js';
 import { Journal, JournalCorrupt, readJournal } from './journal.js';
 import { makeJudge, recordingJudge } from './judges/index.js';
 import { findClaude } from './judges/claude-cli.js';
-import { scaffold, TEMPLATES } from './scaffold.js';
+import { buildWithClaude, scaffold, TEMPLATES } from './scaffold.js';
 import { foldState } from './state.js';
 import { BUILT_IN, tryRepo } from './try.js';
 import { bold, dim, eventPrinter, green, red, terminalApprover, wrap, yellow } from './ui.js';
@@ -318,17 +318,6 @@ async function cmdCheck(args, values) {
     process.chdir(cwdBefore);
     rmSync(scratch, { recursive: true, force: true });
   }
-}
-
-function buildWithClaude(dir, describe) {
-  const found = findClaude();
-  if (!found) throw new Error('--build-with claude needs the claude program on your PATH.');
-  const prompt = `Change bot.js in this folder so the bot does this:\n\n${describe}\n\nRead BUILDING.md first and follow its rules. Edit only bot.js. Keep defineBot, keep limits low, put every piece of outside text in "untrusted", keep "act" as the only place that sends anything, and give every item a stable id. Keep the code short. When the bot needs a service you can't reach from here, leave act() writing to outbox/sent.jsonl with a one-line comment saying what to swap in.`;
-  const args = ['-p', '--allowedTools', 'Read,Edit,Write', '--permission-mode', 'acceptEdits'];
-  const options = { cwd: dir, input: prompt, encoding: 'utf8', windowsHide: true, timeout: 300_000 };
-  const res = found.shim ? spawnSync(`"${found.file}" ${args.join(' ')}`, { ...options, shell: true }) : spawnSync(found.file, args, options);
-  if (res.status !== 0) throw new Error(`The claude program could not build it: ${(res.stderr || res.stdout || '').trim().split('\n')[0]}`);
-  return res.stdout.trim();
 }
 
 async function cmdNew(args, values) {

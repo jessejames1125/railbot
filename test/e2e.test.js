@@ -8,6 +8,7 @@ import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { buildWithClaude, scaffold } from '../src/scaffold.js';
 import { tempDir } from './helpers.js';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -130,6 +131,37 @@ test('a project made from a built-in bot is a file you own that imports only rai
   assert.equal(source.includes('../engine.js'), false);
   const pkg = JSON.parse(readFileSync(join(work, 'keep-prs', 'package.json'), 'utf8'));
   assert.equal(pkg.scripts.start, 'railbot run bot.js --repo o/r');
+});
+
+test('--build-with claude: safe mode, three file tools, and the starter inbox is cleared', (t) => {
+  const work = tempDir(t);
+  const dir = scaffold({ target: join(work, 'notes-bot'), describe: 'Summarize notes', install: false }).dir;
+  assert.ok(existsSync(join(dir, 'inbox')));
+  const calls = [];
+  const said = buildWithClaude(dir, 'Summarize notes', {
+    found: { file: 'claude', shim: false },
+    run: (file, args, options) => {
+      calls.push({ file, args, options });
+      return { status: 0, stdout: 'It summarizes notes now.\n', stderr: '' };
+    },
+  });
+  assert.equal(said, 'It summarizes notes now.');
+  const { args, options } = calls[0];
+  assert.ok(args.includes('--safe-mode'), 'none of the person\'s own notes or settings go in');
+  assert.equal(args[args.indexOf('--tools') + 1], 'Read,Edit,Write');
+  assert.ok(options.input.includes('Summarize notes'));
+  assert.equal(options.env.GITHUB_TOKEN, undefined);
+  assert.equal(existsSync(join(dir, 'inbox')), false);
+  assert.equal(existsSync(join(dir, 'judge-recordings.json')), false);
+  assert.match(readFileSync(join(dir, 'README.md'), 'utf8'), /Summarize notes/);
+});
+
+test('--build-with claude: a failed build says why and leaves the starter alone', (t) => {
+  const work = tempDir(t);
+  const dir = scaffold({ target: join(work, 'b'), install: false }).dir;
+  assert.throws(() => buildWithClaude(dir, 'x', { found: { file: 'claude', shim: false }, run: () => ({ status: 1, stdout: '', stderr: 'not signed in\nmore' }) }), /could not build it: not signed in/);
+  assert.ok(existsSync(join(dir, 'inbox')));
+  assert.throws(() => buildWithClaude(dir, 'x', { found: null }), /needs the claude program/);
 });
 
 test('new refuses a non-empty folder and bad names', (t) => {
