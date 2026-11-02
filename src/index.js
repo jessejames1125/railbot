@@ -2,3 +2,8 @@ export { defineBot, runBot, Refused } from './engine.js';
 export { anthropicJudge, claudeCliJudge, makeJudge, recordedJudge, recordingJudge, rulesJudge } from './judges/index.js';
 export { terminalApprover } from './ui.js';
 export { readGitHub, writeGitHub } from './github.js';
+export { atMost, claimsListed, mustBeTrue, notOptedOut, protectedPaths, smallDiff } from './checks.js';
+export { LOCKED } from './scope.js';
+export { nightly } from './nightly.js';
+export { approvalLoad } from './stats.js';
+export { fixLoop } from './fixloop.js';

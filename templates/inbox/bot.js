@@ -13,6 +13,11 @@ const CANNED = [
 export default defineBot({
   name: '{{name}}',
   limits: { perRun: 2, perDay: 10 },
+  // Every reply waits for your yes. Once you trust it, set email to "medium" in scope.json
+  // and a second AI checks each reply instead. Refunds and account changes are not in
+  // this bot's scope; add them as actions with about: 'refund' or 'account' and they stay
+  // with a person whatever scope.json says.
+  scope: { reads: [], actions: { email: { risk: 'high', undo: 'retract: send a short correction' } } },
   judge: {
     instructions: `You judge a drafted reply to a customer support message.
 Approve when the message is a real customer question and the draft answers it.

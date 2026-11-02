@@ -27,7 +27,8 @@ const HELP = `railbot ${VERSION}: AI bots with rails. Practice mode unless you s
 Start here
   railbot try owner/repo           Run the built-in bots read-only on a public repo.
   railbot new my-bot               Make a bot folder. Then: cd my-bot, npm start.
-    --bot stale-prs|issue-triage|release-notes|inbox    --repo owner/repo
+    --bot inbox|hr|sales|marketing|product|sdlc    (starting templates)
+    --bot stale-prs|issue-triage|release-notes --repo owner/repo
     --describe "what it should do"    --build-with claude
 
 Run a bot

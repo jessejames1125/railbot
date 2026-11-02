@@ -2,6 +2,9 @@
 
 A support-inbox bot built on railbot.
 
+> Written by an engineer without support-team expertise. Adapt the replies and rules with
+> someone who runs support before you rely on it.
+
 ```
 npm start
 ```

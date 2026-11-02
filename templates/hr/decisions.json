@@ -1,0 +1,4 @@
+[
+  { "id": "sam-interview", "name": "Sam", "email": "sam@example.com", "role": "support lead", "decision": "interview", "slots": "Tuesday at 10 or Thursday at 2", "decidedBy": "the hiring manager" },
+  { "id": "jamie-no", "name": "Jamie", "email": "jamie@example.com", "role": "support lead", "decision": "no", "decidedBy": "the hiring manager" }
+]

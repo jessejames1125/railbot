@@ -42,6 +42,23 @@ export function smallDiff(maxLines, field = 'facts.diffLines') {
   };
 }
 
+const CLAIMY = /\d|%|\b(certif\w*|guarantee\w*|award\w*|best|only|fastest|cheapest|free|neutral|compliant|approved|proven|#1|number one|safe|secure)\b/i;
+const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').replace(/[.!?]+$/, '').trim();
+
+/**
+ * Holds a message whose factual-sounding sentences (numbers, "certified", "free" and the
+ * like) are not on the approved claims list. It cannot tell true from false; it makes
+ * sure a person has signed off on each claim once.
+ */
+export function claimsListed(getClaims, field = 'action.body') {
+  return (item) => {
+    const approved = new Set([...(typeof getClaims === 'function' ? getClaims() : getClaims)].map(norm));
+    const text = String(pick(item, field) ?? '');
+    const unlisted = text.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter((s) => s && CLAIMY.test(s) && !approved.has(norm(s)));
+    return unlisted.length ? { hold: `claims not on the approved list: ${unlisted.map((s) => `"${s}"`).join(', ')}` } : null;
+  };
+}
+
 /** Blocks unless a fact the bot measured is true, such as tests passing. */
 export function mustBeTrue(field, what = field) {
   return (item) => (pick(item, field) === true ? null : { block: `${what} is not true` });

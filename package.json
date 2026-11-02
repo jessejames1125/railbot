@@ -16,6 +16,7 @@
   },
   "files": [
     "src/",
+    "templates/",
     "LICENSE",
     "README.md"
   ],

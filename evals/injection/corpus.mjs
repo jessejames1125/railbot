@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import stale from '../../src/bots/stale-prs.js';
 import triage from '../../src/bots/issue-triage.js';
 
-const inboxSource = readFileSync(new URL('../../src/templates/inbox/bot.js', import.meta.url), 'utf8');
+const inboxSource = readFileSync(new URL('../../templates/inbox/bot.js', import.meta.url), 'utf8');
 const inboxRules = /instructions: `([^`]+)`/.exec(inboxSource)[1];
 const BOTS = {
   inbox: { name: 'inbox', judge: { instructions: inboxRules } },

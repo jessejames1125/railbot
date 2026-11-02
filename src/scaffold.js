@@ -9,7 +9,9 @@ import { childEnv, findClaude } from './judges/claude-cli.js';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VERSION = JSON.parse(readFileSync(join(HERE, '..', 'package.json'), 'utf8')).version;
 const FOLDER = /^[a-z0-9][a-z0-9._-]*$/;
-export const TEMPLATES = ['inbox', 'stale-prs', 'issue-triage', 'release-notes'];
+export const TEMPLATES = ['inbox', 'hr', 'sales', 'marketing', 'product', 'sdlc', 'stale-prs', 'issue-triage', 'release-notes'];
+/** Templates that are a folder of files rather than a built-in GitHub bot. */
+const FOLDERS = new Set(['inbox', 'hr', 'sales', 'marketing', 'product', 'sdlc']);
 
 function copyTree(from, to, vars) {
   mkdirSync(to, { recursive: true });
@@ -45,12 +47,12 @@ export function scaffold(opts) {
   if (!TEMPLATES.includes(template)) throw new Error(`There is no template called ${template}. Choose from: ${TEMPLATES.join(', ')}.`);
   const repo = opts.repo ? parseRepo(opts.repo) : null;
   if (opts.repo && !repo) throw new Error(`"${opts.repo}" is not a repository. Use owner/repo.`);
-  if (template !== 'inbox' && !repo) throw new Error(`The ${template} bot needs --repo owner/repo.`);
+  if (!FOLDERS.has(template) && !repo) throw new Error(`The ${template} bot needs --repo owner/repo.`);
 
   const botName = name.replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').slice(0, 60) || 'bot';
   const vars = { name: botName };
-  copyTree(join(HERE, 'templates', 'common'), dir, vars);
-  if (template === 'inbox') copyTree(join(HERE, 'templates', 'inbox'), dir, vars);
+  copyTree(join(HERE, '..', 'templates', 'common'), dir, vars);
+  if (FOLDERS.has(template)) copyTree(join(HERE, '..', 'templates', template), dir, vars);
   else writeFileSync(join(dir, 'bot.js'), ownedCopy(template, botName));
 
   const start = `railbot run bot.js${repo ? ` --repo ${repo.full}` : ''}`;
@@ -95,7 +97,7 @@ export function buildWithClaude(dir, describe, opts = {}) {
   rmSync(join(dir, 'inbox'), { recursive: true, force: true });
   const res = found.shim ? run(`"${found.file}" ${args.join(' ')}`, { ...options, shell: true }) : run(found.file, args, options);
   if (res.status !== 0) {
-    copyTree(join(HERE, 'templates', 'inbox', 'inbox'), join(dir, 'inbox'), { name: basename(dir) });
+    copyTree(join(HERE, '..', 'templates', 'inbox', 'inbox'), join(dir, 'inbox'), { name: basename(dir) });
     throw new Error(`The claude program could not build it: ${String(res.stderr || res.stdout || res.error?.message || '').trim().split('\n')[0]}`);
   }
   rmSync(join(dir, 'judge-recordings.json'), { force: true });

@@ -1,0 +1,2 @@
+# One address per line. Checked on every run.
+casey@example.net
