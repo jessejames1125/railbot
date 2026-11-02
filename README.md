@@ -16,7 +16,7 @@ see. Real runs are listed separately and labeled.
 
 ```
 npx railbot try expressjs/express    # read-only on a public repo, nothing is sent
-npx railbot sim                      # the simulated shop, replayed, no account needed
+npx railbot sim                      # replays the simulated shop, about a minute, no account
 ```
 
 `try` runs three built-in bots (stale pull requests, issue triage, release notes) in

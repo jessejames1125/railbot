@@ -28,7 +28,7 @@ const HELP = `railbot ${VERSION}: AI bots that work inside a scope you set, gate
 
 Start here
   railbot try owner/repo           Run the built-in bots read-only on a public repo.
-  railbot sim                      Replay the simulated company: five ways to gate its work.
+  railbot sim [--all]              Replay the simulated company: five ways to gate its work.
   railbot new my-bot               Make a bot folder. Then: cd my-bot, npm start.
     --bot inbox|hr|sales|marketing|product|sdlc    (starting templates)
     --bot stale-prs|issue-triage|release-notes --repo owner/repo
@@ -413,7 +413,7 @@ async function main() {
     case 'sim': {
       // The simulated company. Replays the saved checker answers unless --live is given.
       const { main: sim } = await import('../evals/sim/run.mjs');
-      await sim(values.live ? ['--seeds', values.seeds ?? '1,2,3', '--model', values.model ?? 'sonnet'] : ['--replay']);
+      await sim(values.live ? ['--seeds', values.seeds ?? '1,2,3', '--model', values.model ?? 'sonnet'] : ['--replay', ...(values.all ? [] : ['--latest'])]);
       return 0;
     }
     case 'audit': return cmdAudit(values);

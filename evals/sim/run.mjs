@@ -232,7 +232,11 @@ async function scoreFile(file, values) {
       summary.runs[`${config}|${seed}|${attention}`] = await runDay({ day, config, judge, attention, version });
     }
     for (const k of summary.sensitivity) {
-      for (const config of ['both', 'person']) summary.runs[`${config}|${seed}|${k ?? 'all'}`] = await runDay({ day, config, judge, attention: k ?? Infinity, version });
+      for (const config of ['both', 'person']) {
+        const key = `${config}|${seed}|${k ?? 'all'}`;
+        // The main setting was already run above; running it again would only cost time.
+        summary.runs[key] ??= await runDay({ day, config, judge, attention: k ?? Infinity, version });
+      }
     }
   }
   if (!values.replay) writeFileSync(new URL(`${stem}-summary.json`, RESULTS), `${JSON.stringify(summary, null, 2)}\n`);
@@ -242,14 +246,16 @@ async function scoreFile(file, values) {
 }
 
 export async function main(args = process.argv.slice(2)) {
-  const { values } = parseArgs({ args, options: { seeds: { type: 'string', default: '1,2,3' }, model: { type: 'string', default: 'sonnet' }, tag: { type: 'string', default: 'v2' }, replay: { type: 'boolean', default: false }, file: { type: 'string' }, workers: { type: 'string', default: '3' }, attention: { type: 'string', default: '20' } } });
+  const { values } = parseArgs({ args, options: { seeds: { type: 'string', default: '1,2,3' }, model: { type: 'string', default: 'sonnet' }, tag: { type: 'string', default: 'v2' }, replay: { type: 'boolean', default: false }, latest: { type: 'boolean', default: false }, file: { type: 'string' }, workers: { type: 'string', default: '3' }, attention: { type: 'string', default: '20' } } });
   if (!values.replay && process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is set, so the claude program would bill that key. Unset it first if you did not mean that.');
   if (values.file) return scoreFile(new URL(values.file, `file:///${process.cwd().replace(/\\/g, '/')}/`), values);
   if (values.replay) {
-    // Every saved run, oldest first, so a later run never hides an earlier one.
-    const saved = existsSync(RESULTS) ? readdirSync(RESULTS).filter((f) => f.endsWith('.jsonl')).sort() : [];
+    // Every saved run, oldest first (by date, then generator version), so a later run never
+    // hides an earlier one. --latest replays only the newest.
+    const order = (f) => { const d = describeFile(f); return `${d.date} ${String(d.version).padStart(3, '0')} ${f}`; };
+    const saved = existsSync(RESULTS) ? readdirSync(RESULTS).filter((f) => f.endsWith('.jsonl')).sort((a, b) => order(a).localeCompare(order(b))) : [];
     if (!saved.length) throw new Error('No saved answers to replay in evals/sim/results.');
-    for (const f of saved) await scoreFile(new URL(f, RESULTS), values);
+    for (const f of values.latest ? saved.slice(-1) : saved) await scoreFile(new URL(f, RESULTS), values);
     return;
   }
   mkdirSync(RESULTS, { recursive: true });
