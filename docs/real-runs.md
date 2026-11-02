@@ -17,3 +17,9 @@ measured accuracy.
 
 The vite run failed partway: the plan's usage limit was hit and the judge calls came back
 as errors, which railbot treats as holds. That is ledger line 5.
+
+## Recording
+
+`docs/first-run.gif` is an uncut recording of the support starter in practice mode with
+the `claude` judge, made 2026-11-02 before the scope and risk gates existed. Today's run
+prints one more line per item (`gated`) in the audit view.
