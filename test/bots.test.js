@@ -247,6 +247,7 @@ test('release notes: builds a draft and proposes only a draft release', async (t
   let sent;
   await notes.act(entry, { github: { send: async (m, p, b) => ((sent = { m, p, b }), { html_url: 'u' }) } });
   assert.equal(sent.b.draft, true);
+  assert.equal(entry.item.facts.changes, undefined, 'titles are outside text, so they stay out of the trusted facts');
 });
 
 test('try: nothing but GET ever reaches GitHub, and a second try repeats nothing', async (t) => {

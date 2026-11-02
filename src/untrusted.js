@@ -5,8 +5,8 @@
 import { randomBytes } from 'node:crypto';
 
 // C0 and C1 controls except tab and newline, zero-width and direction-override
-// characters, and the invisible Unicode "tag" block used to hide text from readers.
-const INVISIBLE = /[​-‏‪-‮⁠-⁤﻿]|[\u{E0000}-\u{E007F}]/gu;
+// characters of every kind, and the invisible Unicode "tag" block used to hide text from readers.
+const INVISIBLE = /[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]|[\u{E0000}-\u{E007F}]/gu;
 const ANSI = /\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1B]*(?:\x07|\x1B\\)|[@-Z\\-_])/g;
 const CONTROL = /[\x00-\x08\x0B-\x1F\x7F-\x9F]/g;
 

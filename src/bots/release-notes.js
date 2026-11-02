@@ -165,7 +165,7 @@ You may rewrite "body" so a user of this project can see what changed for them: 
         id: `release-notes-${base}-to-${head.slice(0, 12)}`,
         title: `Notes for ${repo} since ${base}: ${unique.length} change${unique.length === 1 ? '' : 's'}`,
         action: { type: 'github.draft-release', repo, tag: version ?? `${base}-next`, name: version ?? `${base}-next`, body },
-        facts: { base, head, totalCommits: compare.total_commits, readCommits: compare.commits.length, truncated, counts, suggestedVersion: version, changes: unique.slice(0, 120) },
+        facts: { base, head, totalCommits: compare.total_commits, readCommits: compare.commits.length, truncated, counts, suggestedVersion: version },
         untrusted: { commit_and_pr_titles: unique.map((c) => c.title).join('\n') },
         editable: { body: { type: 'text', maxChars: 20_000 } },
         outbound: { fields: ['body'], allowMentions: authors, allowHosts: ['github.com'], maxChars: 25_000 },
