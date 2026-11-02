@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { checkOutbound } from './outbound.js';
 import { Journal } from './journal.js';
 import { paths, readLive, stopReason, takeLock } from './files.js';
+import { effectiveScope, gateFor, scopeProblem, scopedReads, writesOutside } from './scope.js';
 import { TERMINAL, foldState, sendsInWindow, stateKey } from './state.js';
 import { tripwire } from './untrusted.js';
 import { applyVerdict } from './verdict.js';
@@ -26,6 +27,10 @@ export function defineBot(def) {
     if (!Number.isInteger(def.limits?.[key]) || def.limits[key] < 1) fail(`limits.${key} must be a whole number of 1 or more`);
   }
   if (def.limits.perRun > def.limits.perDay) fail('limits.perRun is larger than limits.perDay');
+  const problem = scopeProblem(def.scope);
+  if (problem) fail(problem);
+  if (def.checks != null && !(Array.isArray(def.checks) && def.checks.every((c) => typeof c === 'function'))) fail('checks must be a list of functions');
+  if (def.author != null && typeof def.author !== 'string') fail('author must name who writes the proposals, like "claude:sonnet"');
   return Object.freeze({
     ...def,
     limits: Object.freeze({ perRun: def.limits.perRun, perDay: def.limits.perDay, judgeCallsPerRun: def.limits.judgeCallsPerRun ?? 25 }),
@@ -51,12 +56,44 @@ function normalizeItem(raw) {
     untrusted: raw.untrusted ?? {},
     touches: raw.touches ?? ['people'],
     sends,
+    about: typeof raw.about === 'string' ? raw.about : null,
+    writes: Array.isArray(raw.writes) ? raw.writes.map(String) : [],
     editable: raw.editable ?? {},
     outbound: raw.outbound ?? null,
     rulesVerdict: raw.rulesVerdict ?? null,
     preview: raw.preview ?? null,
   };
 }
+
+/** Who a judge is, for the rule that the checker is never the author. */
+export const judgeId = (judge) => judge.id ?? `${judge.name}${judge.model ? `:${judge.model}` : ''}`;
+
+/** The gates a run uses. Only experiments change these; the command line has no switch for it. */
+export const DEFAULT_GATES = Object.freeze({ deterministic: true, checker: true, person: 'tiered' });
+
+/** Runs the bot's own deterministic checks. Each returns null, a hold reason, or { block }. */
+function runChecks(bot, item, action) {
+  const out = { hold: [], block: [] };
+  for (const check of bot.checks ?? []) {
+    let r;
+    try {
+      r = check({ ...item, action });
+    } catch (e) {
+      r = { block: `a check failed to run: ${e.message}` };
+    }
+    if (!r) continue;
+    if (typeof r === 'string') out.hold.push(r);
+    else if (r.block) out.block.push(String(r.block));
+    else if (r.hold) out.hold.push(String(r.hold));
+  }
+  return out;
+}
+
+const limitsOf = (bot, scope) => ({
+  ...bot.limits,
+  perRun: Math.min(bot.limits.perRun, scope.limits.perRun ?? Infinity),
+  perDay: Math.min(bot.limits.perDay, scope.limits.perDay ?? Infinity),
+});
 
 /** Refuses unless every condition for sending real things holds. */
 export function liveRefusal(bot, judge, p, attended, journalProblems = []) {
@@ -94,7 +131,8 @@ export async function runBot(bot, opts) {
   const release = takeLock(p.lock, 'run');
   const onExit = () => release();
   process.once('exit', onExit);
-  const summary = { mode, judge: judge.name, stopped: null, proposed: 0, skipped: 0, items: [], currentIds: [], sent: 0, limit: null, inDoubt: [] };
+  const summary = { mode, judge: judge.name, stopped: null, proposed: 0, skipped: 0, items: [], currentIds: [], sent: 0, limit: null, inDoubt: [], warnings: [] };
+  const gates = { ...DEFAULT_GATES, ...(opts.gates ?? {}) };
 
   let journal;
   try {
@@ -103,7 +141,19 @@ export async function runBot(bot, opts) {
       const why = liveRefusal(bot, judge, p, opts.attended === true);
       if (why) throw new Refused(`Live run refused: ${why}.`);
     }
-    journal.append('run-start', { bot: bot.name, mode, judge: judge.name, limits: bot.limits });
+    const scope = effectiveScope(bot, opts.dir);
+    if (bot.author && judgeId(judge) === bot.author) {
+      throw new Refused(`Run refused: the checker (${judgeId(judge)}) is the same as the author of the proposals. Pick a different judge or model.`);
+    }
+    journal.append('run-start', { bot: bot.name, mode, judge: judge.name, limits: limitsOf(bot, scope) });
+    const warn = (w) => {
+      journal.append('scope-warning', { mode, warning: w });
+      summary.warnings.push(w);
+      ui({ type: 'warning', text: w });
+    };
+    scope.warnings.forEach(warn);
+    const changed = Object.keys(DEFAULT_GATES).filter((k) => gates[k] !== DEFAULT_GATES[k]);
+    if (changed.length) warn(`Gates changed for this run: ${changed.map((k) => `${k}=${gates[k]}`).join(', ')}. This is for experiments.`);
     const halted = () => {
       const why = stopReason(p);
       if (why) {
@@ -115,9 +165,9 @@ export async function runBot(bot, opts) {
     };
 
     if (!halted()) {
-      await proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, halted, clock });
+      await proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, halted, clock, scope, gates });
       if (!summary.stopped) await review({ journal, mode, opts, summary, ui, halted });
-      if (!summary.stopped) await perform({ bot, journal, mode, opts, summary, ui, halted, clock });
+      if (!summary.stopped) await perform({ bot, journal, mode, opts, summary, ui, halted, clock, limits: limitsOf(bot, scope) });
     }
 
     const final = foldState(journal.events);
@@ -136,8 +186,8 @@ export async function runBot(bot, opts) {
   }
 }
 
-async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, halted, clock }) {
-  const ctx = Object.freeze({ params: opts.params ?? {}, read: opts.readTools ?? {}, now: clock(), mode, log: (text) => ui({ type: 'log', text }) });
+async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, halted, clock, scope, gates }) {
+  const ctx = Object.freeze({ params: opts.params ?? {}, read: scopedReads(opts.readTools ?? {}, scope), now: clock(), mode, log: (text) => ui({ type: 'log', text }) });
   const raw = await bot.propose(ctx);
   let calls = 0;
   for (const rawItem of raw ?? []) {
@@ -173,35 +223,81 @@ async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, h
     journal.append('proposed', { mode, id: item.id, itemHash: hash, item });
     ui({ type: 'proposed', item });
 
-    const flags = tripwire(item.untrusted);
-    let verdict;
+    const gate = gateFor(scope, item);
+    const route = (to, extra = {}) => journal.append('gated', { mode, id: item.id, route: to, risk: gate.risk ?? null, undo: gate.undo ?? null, ...extra });
+    const strayWrites = writesOutside(scope, item.writes);
+    const outside = gate.refused ?? (strayWrites.length ? `writes outside this bot's scope: ${strayWrites.join(', ')}` : null);
+    if (outside && gates.deterministic) {
+      route('refused');
+      journal.append('closed', { mode, id: item.id, status: 'blocked', reason: outside });
+      ui({ type: 'judged', item, verdict: { decision: 'reject', reason: outside }, flags: [outside], action: item.action });
+      continue;
+    }
+    const risk = gate.risk ?? 'high';
+
+    const flags = gates.deterministic ? tripwire(item.untrusted) : [];
+    let verdict = null;
     let action = item.action;
-    calls++;
-    try {
-      const applied = applyVerdict(await judge.decide({ bot, item }), item);
-      verdict = applied.verdict;
-      action = applied.action;
-      flags.push(...applied.flags);
-    } catch (e) {
-      // A judge that fails never lets anything through. The item waits for a person.
-      verdict = { decision: 'hold', reason: `The judge could not decide: ${e.message}`, failed: true };
+    // Low-risk actions in the normal setup skip the checker: deterministic checks and undo cover them.
+    const useChecker = gates.checker && !(gates.person === 'tiered' && scope.declared && risk === 'low');
+    if (useChecker) {
+      calls++;
+      try {
+        const applied = applyVerdict(await judge.decide({ bot, item }), item);
+        verdict = applied.verdict;
+        action = applied.action;
+        flags.push(...applied.flags);
+      } catch (e) {
+        // A judge that fails never lets anything through. The item waits for a person.
+        verdict = { decision: 'hold', reason: `The judge could not decide: ${e.message}`, failed: true };
+      }
     }
 
-    const outbound = checkOutbound(action, item.outbound);
-    flags.push(...outbound.hold, ...outbound.block);
+    const block = [];
+    if (gates.deterministic) {
+      const outbound = checkOutbound(action, item.outbound);
+      const own = runChecks(bot, item, action);
+      flags.push(...outbound.hold, ...own.hold, ...outbound.block, ...own.block);
+      block.push(...outbound.block, ...own.block);
+    }
     const finalHash = hashJson(action);
-    journal.append('judged', { mode, id: item.id, judge: judge.name, verdict, flags, action, finalHash });
+    journal.append('judged', { mode, id: item.id, judge: useChecker ? judge.name : 'none', verdict, flags, action, finalHash });
     ui({ type: 'judged', item, verdict, flags, action });
 
-    if (outbound.block.length) {
-      journal.append('closed', { mode, id: item.id, status: 'blocked', reason: outbound.block.join('; ') });
-    } else if (verdict.decision === 'reject') {
-      journal.append('closed', { mode, id: item.id, status: 'rejected', reason: verdict.reason });
-    } else if (verdict.decision === 'approve' && !flags.length && !item.touches.length && bot.autoApprove?.(item) === true) {
-      // Only items that touch no person and no money can skip the human, and only clean ones.
+    const auto = (by, note) => {
       journal.append('queued', { mode, id: item.id });
-      journal.append('human-approved', { mode, id: item.id, finalHash, note: 'auto: touches nothing outside', by: 'code' });
+      journal.append('human-approved', { mode, id: item.id, finalHash, note, by });
+    };
+    const approved = verdict?.decision === 'approve' && !verdict.failed;
+    if (block.length) {
+      route('blocked');
+      journal.append('closed', { mode, id: item.id, status: 'blocked', reason: block.join('; ') });
+    } else if (verdict?.decision === 'reject') {
+      route('rejected');
+      journal.append('closed', { mode, id: item.id, status: 'rejected', reason: verdict.reason });
+    } else if (gates.person === 'all') {
+      route('person');
+      journal.append('queued', { mode, id: item.id });
+    } else if (gates.person === 'never') {
+      if (!useChecker || approved) {
+        route('auto');
+        auto('code', 'no person in this setup');
+      } else {
+        route('blocked');
+        journal.append('closed', { mode, id: item.id, status: 'blocked', reason: 'the checker did not approve and there is no person to ask' });
+      }
+    } else if (scope.declared && !gate.locked && !flags.length && risk === 'low') {
+      route('auto');
+      auto('code', `low risk; undo: ${gate.undo}`);
+    } else if (scope.declared && !gate.locked && !flags.length && risk === 'medium' && approved) {
+      route('checker');
+      auto(`checker:${judgeId(judge)}`, `medium risk; undo: ${gate.undo}`);
+    } else if (!scope.declared && approved && !flags.length && !item.touches.length && bot.autoApprove?.(item) === true) {
+      // Bots with no scope: only items that touch no person and no money can skip the human, and only clean ones.
+      route('auto');
+      auto('code', 'auto: touches nothing outside');
     } else {
+      route('person', gate.locked ? { locked: gate.locked } : {});
       journal.append('queued', { mode, id: item.id });
     }
   }
@@ -232,17 +328,17 @@ async function review({ journal, mode, opts, summary, ui, halted }) {
   }
 }
 
-async function perform({ bot, journal, mode, opts, summary, ui, halted, clock }) {
+async function perform({ bot, journal, mode, opts, summary, ui, halted, clock, limits }) {
   const ready = () => [...foldState(journal.events).values()].filter((s) => s.mode === mode && s.status === 'approved');
   let sentThisRun = 0;
   for (const entry of ready()) {
     if (halted()) return;
     const sends = entry.item.sends ?? 1;
     const inWindow = sendsInWindow(journal.events, mode, clock());
-    if (sentThisRun + sends > bot.limits.perRun) {
-      summary.limit = `per-run limit of ${bot.limits.perRun} reached`;
-    } else if (inWindow + sends > bot.limits.perDay) {
-      summary.limit = `limit of ${bot.limits.perDay} in 24 hours reached`;
+    if (sentThisRun + sends > limits.perRun) {
+      summary.limit = `per-run limit of ${limits.perRun} reached`;
+    } else if (inWindow + sends > limits.perDay) {
+      summary.limit = `limit of ${limits.perDay} in 24 hours reached`;
     }
     if (summary.limit) {
       journal.append('limit-hit', { mode, id: entry.id, reason: summary.limit, inWindow, sentThisRun });

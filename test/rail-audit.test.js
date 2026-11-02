@@ -14,7 +14,7 @@ test('every step of an action is in the log with its reason', async (t) => {
   await runBot(bot, { dir, mode: 'live', judge: realishJudge(), approver: approveAll, attended: true });
   const { events } = readJournal(join(dir, '.railbot', 'test-bot', 'journal.jsonl'));
   const types = events.filter((e) => e.id === 'a').map((e) => e.type);
-  assert.deepEqual(types, ['proposed', 'judged', 'queued', 'human-approved', 'act-start', 'act-done']);
+  assert.deepEqual(types, ['proposed', 'judged', 'gated', 'queued', 'human-approved', 'act-start', 'act-done']);
   assert.equal(events.find((e) => e.type === 'judged').verdict.reason, 'fine');
 });
 

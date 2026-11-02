@@ -1,7 +1,7 @@
 // Rebuild what we know about every item by replaying the journal. Practice and
 // live are kept apart, so a yes given in practice can never send anything live.
 
-export const TERMINAL = new Set(['rejected', 'blocked', 'denied', 'done', 'failed', 'practiced', 'dropped', 'in-doubt']);
+export const TERMINAL = new Set(['rejected', 'blocked', 'denied', 'done', 'failed', 'practiced', 'dropped', 'in-doubt', 'undone', 'broken']);
 
 export function stateKey(mode, id) {
   return `${mode}:${id}`;
@@ -51,6 +51,15 @@ export function foldState(events) {
         break;
       case 'dropped':
         Object.assign(s, { status: 'dropped', reason: e.reason });
+        break;
+      case 'verified':
+        Object.assign(s, { verifiedAt: e.ts });
+        break;
+      case 'undone':
+        Object.assign(s, { status: 'undone', reason: e.reason });
+        break;
+      case 'broken':
+        Object.assign(s, { status: 'broken', reason: e.reason });
         break;
       case 'resolved':
         Object.assign(s, { status: e.outcome === 'done' ? 'done' : 'failed', note: e.note });
