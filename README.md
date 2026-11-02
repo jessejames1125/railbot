@@ -70,7 +70,8 @@ Six scoped bots (engineering, support, sales, marketing, product, HR) propose 10
 day for 3 days. 14 a day are planted faults: a refund larger than the order, a buggy merge,
 a false claim, a mail to someone who opted out, a customer email that tries to give orders,
 an action outside the bot's scope, an HR decision. The checker is real (Sonnet through the
-`claude` program); the proposals and the person are scripted. Run 2, faults per day:
+`claude` program) and its answers are saved, so `sim` replays them with no account; the
+proposals and the person are scripted. Run 2, per day (`sim` prints more columns):
 
 | Gates | Faults left standing | Good actions blocked | Person asked, per 100 |
 |---|---|---|---|
@@ -88,13 +89,14 @@ items a day with care; with unlimited care it missed 3 over 3 days. That attenti
 our assumption, and it decides that row.
 
 Two of the seven hypotheses we wrote down before running failed. The defaults did not beat
-the second AI alone on faults (both 0). And run 1 asked the person 52 to 53 times per 100 against
-a line of 25, because our generator left out facts a careful checker needed; we fixed the
+the second AI alone on faults (both 0, in both runs). And run 1 asked the person 52 to 53
+times per 100 against a line of 25, because our generator left out facts a careful checker needed; we fixed the
 generator, said so in the plan, and kept run 1 in the [ledger](evals/LEDGER.md).
 
 ## Templates
 
-`npx railbot new my-bot --bot <name>` makes a folder you own.
+`npx railbot new my-bot --bot <name>` makes a folder you own; `cd my-bot` and `npm start`
+run it in practice mode.
 
 | Template | What it does | Locked to a person |
 |---|---|---|
@@ -142,8 +144,6 @@ More in [docs/writing-a-bot.md](docs/writing-a-bot.md).
 - **Laws are yours.** Commercial email has rules (US CAN-SPAM: honor opt-outs within 10
   business days, include a postal address); automated hiring tools are regulated in New
   York City, Illinois and Colorado. The templates link the sources. Not legal advice.
-- The injection envelope showed no measurable effect: Sonnet and Haiku resisted every
-  planted attack with or without it.
 
 ## Why not
 
@@ -154,8 +154,7 @@ More in [docs/writing-a-bot.md](docs/writing-a-bot.md).
 - **AgentDojo** measures planted prompt-injection attacks against defenses, and is the
   closest research tool. It does not model a person approving or a ladder of gate setups.
 - **NeMo Guardrails, Invariant** are runtime guardrail layers with their own policy
-  languages. Use them for conversation rails or a tool-call proxy; railbot is smaller and
-  aimed at bots that act on a schedule.
+  languages; railbot is smaller and aimed at bots that act on a schedule.
 - **A script that calls a model and then acts** is what railbot replaces.
 
 ## License
