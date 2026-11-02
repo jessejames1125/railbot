@@ -7,3 +7,5 @@ export { LOCKED } from './scope.js';
 export { nightly } from './nightly.js';
 export { approvalLoad } from './stats.js';
 export { fixLoop } from './fixloop.js';
+export { claudeAuthor } from './author.js';
+export { askClaude } from './judges/claude-cli.js';

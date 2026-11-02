@@ -52,7 +52,7 @@ export function claudeCliJudge(opts = {}) {
  * @param {{ system: string, user: string, schema: object }} prompt
  * @param {{ model?: string, effort?: string, timeoutMs?: number, spawnImpl?: typeof spawn, found?: {file: string, shim: boolean} }} [opts]
  */
-export async function askClaude({ system, user, schema }, opts = {}) {
+export async function askClaude({ system, user, schema, hint }, opts = {}) {
   const found = opts.found ?? findClaude();
   if (!found) throw new Error('the claude program is not on PATH');
   // An empty folder, so no project file or setting can reach the judge.
@@ -77,7 +77,7 @@ export async function askClaude({ system, user, schema }, opts = {}) {
       writeFileSync(promptFile, system);
       args[args.indexOf('--tools') + 1] = '""';
       args.push('--system-prompt-file', `"${promptFile}"`);
-      input = `${user}\n\nAnswer with JSON only: {"decision": "approve|reject|hold", "reason": "...", "injection_seen": true|false, "edits": {...}}`;
+      input = `${user}\n\n${hint ?? 'Answer with JSON only: {"decision": "approve|reject|hold", "reason": "...", "injection_seen": true|false, "edits": {...}}'}`;
     } else {
       args.push('--system-prompt', system, '--json-schema', JSON.stringify(schema));
     }

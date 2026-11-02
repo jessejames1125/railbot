@@ -1,0 +1,12 @@
+{
+  "repo": "../my-project",
+  "base": "main",
+  "test": "npm test",
+  "nightly": "npm run test:nightly",
+  "coverage": null,
+  "author": "sonnet",
+  "reviewer": "local",
+  "reviewerModel": "opus",
+  "maxRetries": 2,
+  "maxDiff": 150
+}
