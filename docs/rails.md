@@ -12,7 +12,7 @@ Each rail is code outside the model. A judge that has been talked into anything 
 
 ## Approval
 
-Nothing goes out without a person's yes in a terminal. With no terminal, items wait for `railbot review`. The judge's answer decides what reaches that person:
+A bot with no `scope` sends every item to a person. A bot with a scope decides per action type: low risk runs on the checks alone, medium on a second AI, high on a person; see [gates.md](gates.md). With no terminal, items for a person wait for `railbot review`. The judge's answer decides what reaches that person:
 
 - reject closes the item. Overriding it takes `railbot reopen` at a real terminal, followed by a fresh yes.
 - hold and approve both go to the person, with the judge's reason on the card. A hold is the judge asking you, so your yes counts.
@@ -22,7 +22,7 @@ If the draft changes after the yes, the yes is void. A person's no is final, and
 
 The terminal check is a check for a real terminal. It stops scripts and cron jobs by accident or design. Code running as you could still fake one, or edit the files directly, so anything you run as yourself is inside the trust boundary.
 
-Auto-approve exists for your own low-stakes bots, and it is ignored for any item that is flagged or that declares it touches people.
+For bots with no scope, auto-approve exists for your own low-stakes bots, and it is ignored for any item that is flagged or that declares it touches people.
 
 ## Crash safety
 
