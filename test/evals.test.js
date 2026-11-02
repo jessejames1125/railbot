@@ -61,3 +61,28 @@ test('label scoring counts the first label and every label, over what was labele
   ];
   assert.deepEqual(scoreMethod(rows, (r) => r.m), { total: 3, labeled: 2, firstRight: 1, right: 1, applied: 3 });
 });
+
+test('the simulated day: 100 actions, 14 faults, and no ground truth reaches a bot or the checker', async () => {
+  const { workday } = await import('../evals/sim/company.mjs');
+  const { toItem } = await import('../evals/sim/bots.mjs');
+  const day = workday(7);
+  assert.equal(day.length, 100);
+  assert.equal(day.filter((a) => a.fault).length, 14);
+  assert.deepEqual(workday(7), day, 'a seed always gives the same day');
+  for (const a of day) assert.deepEqual(Object.keys(toItem(a)).sort(), ['action', 'facts', 'id', 'title', 'untrusted', 'writes']);
+});
+
+test('the simulation scores the gates, not the checker: with a checker that approves everything', async () => {
+  const { runDay } = await import('../evals/sim/run.mjs');
+  const { workday } = await import('../evals/sim/company.mjs');
+  const day = workday(1);
+  const yes = { name: 'claude', model: 'fake', canGoLive: false, decide: async () => ({ decision: 'approve', reason: 'fine', injection_seen: false }) };
+  const none = await runDay({ day, config: 'none', judge: yes });
+  assert.equal(none.standing, 14);
+  const det = await runDay({ day, config: 'deterministic', judge: yes });
+  for (const type of ['wrong-refund', 'opted-out', 'out-of-scope']) assert.equal(det.byFault[type].standing, 0, type);
+  assert.equal(det.byFault['buggy-pr'].standing + det.byFault['buggy-pr'].undone, 1, 'one bug stopped by fast tests, the other undone at night');
+  const person = await runDay({ day, config: 'person', judge: yes, attention: Infinity });
+  assert.equal(person.personAsked, 100);
+  assert.equal(person.byFault['buggy-pr'].standing, 1, 'the stand-in cannot see a bug that needs running code');
+});
