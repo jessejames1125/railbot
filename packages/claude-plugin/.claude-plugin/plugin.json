@@ -1,0 +1,7 @@
+{
+  "name": "railbot",
+  "description": "Describe a bot in plain English and get one built on railbot's rails: practice mode, human approval, hard send limits, audit log.",
+  "version": "0.1.0",
+  "author": { "name": "jessejames1125" },
+  "license": "MIT"
+}
