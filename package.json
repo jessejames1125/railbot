@@ -10,7 +10,8 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./github": "./src/github.js"
+    "./github": "./src/github.js",
+    "./bots/*": "./src/bots/*"
   },
   "files": [
     "src/",
@@ -23,5 +24,13 @@
   "scripts": {
     "test": "node --test --test-reporter=spec \"test/*.test.js\""
   },
-  "keywords": ["ai-agents", "bots", "human-in-the-loop", "claude", "github-bot", "guardrails", "audit-log"]
+  "keywords": [
+    "ai-agents",
+    "bots",
+    "human-in-the-loop",
+    "claude",
+    "github-bot",
+    "guardrails",
+    "audit-log"
+  ]
 }
