@@ -40,6 +40,31 @@ export function classify(title, labels = []) {
   return 'internal';
 }
 
+const PLAIN_VERSION = /^v?\d+\.\d+\.\d+$/;
+
+/**
+ * In a monorepo the newest release can belong to one small package (create-vite@9.3.3 in
+ * vitejs/vite), so prefer the newest release tagged as the project itself.
+ */
+export function pickBase(latest, releases, repoName) {
+  if (PLAIN_VERSION.test(latest)) return latest;
+  const stable = releases.filter((r) => !r.draft && !r.prerelease).map((r) => r.tag_name);
+  return stable.find((t) => PLAIN_VERSION.test(t)) ?? stable.find((t) => t.startsWith(`${repoName}@`)) ?? latest;
+}
+
+/** The same change often shows up twice: as a commit and as the pull request that merged it. */
+export function dropRepeats(changes) {
+  const key = (c) => cleanTitle(c.title).toLowerCase();
+  const withPr = new Set(changes.filter((c) => c.pr).map(key));
+  const seen = new Set();
+  return changes.filter((c) => {
+    if (!c.pr && withPr.has(key(c))) return false;
+    if (seen.has(key(c))) return false;
+    seen.add(key(c));
+    return true;
+  });
+}
+
 /** The next version a reader should expect from these changes. */
 export function nextVersion(tag, counts) {
   const m = /^(v?)(\d+)\.(\d+)\.(\d+)$/.exec(tag ?? '');
@@ -98,6 +123,7 @@ You may rewrite "body" so a user of this project can see what changed for them: 
     let base;
     try {
       base = (await gh.get(`/repos/${repo}/releases/latest`)).tag_name;
+      if (!PLAIN_VERSION.test(base)) base = pickBase(base, await gh.getAll(`/repos/${repo}/releases?per_page=100`), repo.split('/')[1]);
     } catch {
       base = (await gh.getAll(`/repos/${repo}/tags?per_page=1`))[0]?.name;
     }
@@ -128,23 +154,24 @@ You may rewrite "body" so a user of this project can see what changed for them: 
       changes.push({ title, pr: number || null, author, isBot: pr?.user?.type === 'Bot' || /\[bot\]$/.test(author ?? ''), group: classify(title, (pr?.labels ?? []).map((l) => l.name)) });
     }
 
-    const { body, counts } = buildNotes(changes, { base, repo });
+    const unique = dropRepeats(changes);
+    const { body, counts } = buildNotes(unique, { base, repo });
     const version = nextVersion(base, counts);
     const truncated = compare.total_commits > compare.commits.length;
-    const authors = [...new Set(changes.map((c) => c.author).filter(Boolean))];
+    const authors = [...new Set(unique.map((c) => c.author).filter(Boolean))];
     const preview = `Create a draft release ${version ?? '(version not worked out)'} on ${repo}:\n\n${body}`;
     return [
       {
         id: `release-notes-${base}-to-${head.slice(0, 12)}`,
-        title: `Notes for ${repo} since ${base}: ${changes.length} changes`,
+        title: `Notes for ${repo} since ${base}: ${unique.length} change${unique.length === 1 ? '' : 's'}`,
         action: { type: 'github.draft-release', repo, tag: version ?? `${base}-next`, name: version ?? `${base}-next`, body },
-        facts: { base, head, totalCommits: compare.total_commits, readCommits: compare.commits.length, truncated, counts, suggestedVersion: version, changes: changes.slice(0, 120) },
-        untrusted: { commit_and_pr_titles: changes.map((c) => c.title).join('\n') },
+        facts: { base, head, totalCommits: compare.total_commits, readCommits: compare.commits.length, truncated, counts, suggestedVersion: version, changes: unique.slice(0, 120) },
+        untrusted: { commit_and_pr_titles: unique.map((c) => c.title).join('\n') },
         editable: { body: { type: 'text', maxChars: 20_000 } },
         outbound: { fields: ['body'], allowMentions: authors, allowHosts: ['github.com'], maxChars: 25_000 },
         rulesVerdict: truncated
           ? { decision: 'hold', reason: `Only the first ${compare.commits.length} of ${compare.total_commits} commits could be read, so a person should finish these.` }
-          : { decision: 'approve', reason: `${changes.length} changes since ${base}, sorted by label and title wording.` },
+          : { decision: 'approve', reason: `${unique.length} changes since ${base}, sorted by label and title wording.` },
         preview,
       },
     ];

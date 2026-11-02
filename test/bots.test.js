@@ -7,7 +7,7 @@ import { rulesJudge } from '../src/judges/index.js';
 import { buildIndex } from '../src/bots/lib.js';
 import stale, { readTimeline, waitingDays } from '../src/bots/stale-prs.js';
 import triage, { suggestLabels } from '../src/bots/issue-triage.js';
-import notes, { buildNotes, classify, nextVersion } from '../src/bots/release-notes.js';
+import notes, { buildNotes, classify, dropRepeats, nextVersion, pickBase } from '../src/bots/release-notes.js';
 import { clipLines, tryRepo } from '../src/try.js';
 import { readJournal } from '../src/journal.js';
 import { paths } from '../src/files.js';
@@ -186,6 +186,31 @@ test('release notes: collapses noise and does not ping people from commit titles
   assert.match(body, /Updated 4 dependencies/);
   assert.match(body, /`@mallory`/);
   assert.match(body, /by @alice/);
+});
+
+test('release notes: in a monorepo, compares against the project and not its newest small package', () => {
+  const releases = [
+    { tag_name: 'create-vite@9.3.3' },
+    { tag_name: 'v9.0.0-beta.1', prerelease: true },
+    { tag_name: 'plugin-x@1.0.0' },
+    { tag_name: 'v8.1.4' },
+    { tag_name: 'v8.1.3' },
+  ];
+  assert.equal(pickBase('create-vite@9.3.3', releases, 'vite'), 'v8.1.4');
+  assert.equal(pickBase('v2.0.0', releases, 'vite'), 'v2.0.0');
+  assert.equal(pickBase('core@2.0.0', [{ tag_name: 'core@2.0.0' }, { tag_name: 'cli@1.0.0' }], 'cli'), 'cli@1.0.0');
+  assert.equal(pickBase('nightly', [{ tag_name: 'nightly' }], 'x'), 'nightly');
+});
+
+test('release notes: a commit and the pull request that merged it are one change', () => {
+  const out = dropRepeats([
+    { title: 'add zizmor to scan workflows', pr: null },
+    { title: 'add zizmor to scan workflows (#5945)', pr: 5945 },
+    { title: 'fix: stop crash', pr: null },
+    { title: 'Fix: stop crash', pr: null },
+    { title: 'something else', pr: null },
+  ]);
+  assert.deepEqual(out.map((c) => c.title), ['add zizmor to scan workflows (#5945)', 'fix: stop crash', 'something else']);
 });
 
 function releaseRoutes(path) {
