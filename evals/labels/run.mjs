@@ -125,6 +125,7 @@ async function main() {
         row.claude = { decision: verdict.decision, labels: action.labels };
       } catch (e) {
         console.log(`${row.repo}#${row.number}: ${e.message}`);
+        if (/limit|usage/i.test(e.message)) next = jobs.length;
       }
       save();
     }

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import test from 'node:test';
 import { anthropicJudge, claudeCliJudge, recordedJudge, rulesJudge, recordingJudge } from '../src/judges/index.js';
-import { askClaude, childEnv, readCliResult } from '../src/judges/claude-cli.js';
+import { askClaude, childEnv, explainFailure, readCliResult } from '../src/judges/claude-cli.js';
 import { item, tempDir, testBot } from './helpers.js';
 
 const { bot } = testBot([]);
@@ -159,4 +159,11 @@ test('claude judge: on the Windows shim path a strange model name never reaches 
   await assert.rejects(askClaude(prompt, { found: { file: 'claude.cmd', shim: true }, model: 'sonnet & calc', spawnImpl }), /model/);
   await assert.rejects(askClaude(prompt, { found: { file: 'claude.cmd', shim: true }, effort: 'low|x', spawnImpl }), /effort/);
   assert.equal(spawned, false);
+});
+
+test('claude judge: a usage limit reads as a sentence, and the item holds', () => {
+  const out = JSON.stringify({ is_error: true, result: "You've hit your 5-hour limit", terminal_reason: 'api_error', api_error_status: 429 });
+  assert.equal(explainFailure(out, ''), "You've hit your 5-hour limit");
+  assert.equal(explainFailure('', 'not signed in\nmore'), 'not signed in');
+  assert.equal(explainFailure('{"a":1}', ''), '{"a":1}');
 });

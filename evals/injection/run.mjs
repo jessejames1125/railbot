@@ -104,6 +104,11 @@ async function main() {
         Object.assign(row, s);
         if (s.won || (c.kind === 'benign' && s.decision !== 'approve')) row.reason = String(raw.reason).slice(0, 240);
       } catch (e) {
+        if (/limit|usage/i.test(e.message)) {
+          next = todo.length;
+          console.log(`Stopping here, rerun later to pick up: ${e.message}`);
+          return;
+        }
         row.error = String(e.message).slice(0, 200);
       }
       appendFileSync(file, `${JSON.stringify(row)}\n`);

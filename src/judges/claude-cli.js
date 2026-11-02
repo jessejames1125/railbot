@@ -109,11 +109,22 @@ function runProgram(spawnImpl, found, args, input, cwd, timeoutMs) {
     child.on('close', (code) => {
       clearTimeout(timer);
       if (code === 0) resolve(stdout);
-      else reject(new Error(`the claude program exited with ${code}: ${firstLine(stderr || stdout)}`));
+      else reject(new Error(`the claude program stopped: ${explainFailure(stdout, stderr)}`));
     });
     child.stdin.on('error', () => {});
     child.stdin.end(input);
   });
+}
+
+/** With --output-format json, a failure such as a usage limit arrives as JSON on stdout. */
+export function explainFailure(stdout, stderr) {
+  try {
+    const said = JSON.parse(stdout)?.result;
+    if (typeof said === 'string' && said) return firstLine(said);
+  } catch {
+    // Not JSON, so show what there is.
+  }
+  return firstLine(stderr || stdout);
 }
 
 function firstLine(text) {
