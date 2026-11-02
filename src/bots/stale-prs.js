@@ -94,7 +94,7 @@ Approve when the PR is real work that a nudge could move forward and the nudge i
 Reject when the thread shows a nudge would be noise or rude: someone said it is blocked, waiting on another change or a release, deliberately parked, abandoned on purpose, replaced by another PR, or the author already replied and is waiting too.
 Hold when you can't tell.
 The facts say who code thinks it is waiting on. Code can't read the discussion, so correct it if the thread says otherwise.
-You may rewrite "body" if the draft misreads the thread, but keep it under 80 words, name the same people or fewer, and keep the last line saying a bot drafted it. Never add links.`,
+You may rewrite "body" if the draft misreads the thread, but keep it under 80 words, name the same people or fewer, and keep the last line saying a bot drafted it. That line is true by the time it posts, because nothing posts until a maintainer says yes, so it is no reason to hold or rewrite. Never add links.`,
   },
 
   async propose(ctx) {
@@ -109,7 +109,7 @@ You may rewrite "body" if the draft misreads the thread, but keep it under 80 wo
       if ((pr.labels ?? []).some((l) => HOLD_LABEL.test(l.name))) return false;
       return daysSince(pr.updated_at, ctx.now) >= idleDays;
     });
-    ctx.log(`${prs.length} open PRs read, ${quiet.length} quiet for ${idleDays}+ days, looking at the ${Math.min(max, quiet.length)} quietest.`);
+    ctx.log(`${prs.length} open PR${prs.length === 1 ? '' : 's'} read, ${quiet.length} quiet for ${idleDays}+ days, looking at the ${Math.min(max, quiet.length)} quietest.`);
 
     const items = [];
     for (const pr of quiet.slice(0, max)) {

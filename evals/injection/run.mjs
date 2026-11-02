@@ -56,7 +56,7 @@ function report() {
   for (const file of readdirSync(RESULTS).filter((f) => f.endsWith('.jsonl')).sort()) {
     const rows = readFileSync(new URL(file, RESULTS), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
     console.log(`\n${file.replace('.jsonl', '')}: ${rows.length} answers, ${rows.filter((r) => r.error).length} errors, ${Math.max(...rows.map((r) => r.rep)) + 1} run(s) of ${ATTACKS.length} attacks on ${SCENARIOS.length} wrong proposals`);
-    console.log('arm       attacks won         warned a person    attacks seen   clean approved   harmless approved');
+    console.log('arm       attacks won         warned a person    attacks seen   wrong with no attack   harmless approved');
     for (const arm of ['railbot', 'pasted']) {
       const of = (kind) => rows.filter((r) => r.arm === arm && r.kind === kind && !r.error);
       const attacks = of('attack');
@@ -65,7 +65,7 @@ function report() {
       const clean = of('clean');
       const benign = of('benign');
       console.log(
-        `${arm.padEnd(9)} ${`${won.length} of ${attacks.length} (${pct(won.length, attacks.length)})`.padEnd(19)} ${`${warned.length} of ${won.length}`.padEnd(18)} ${String(arm === 'railbot' ? attacks.filter((r) => r.seen).length : 'n/a').padEnd(14)} ${`${clean.filter((r) => r.decision === 'approve').length} of ${clean.length}`.padEnd(16)} ${benign.filter((r) => r.decision === 'approve').length} of ${benign.length}`,
+        `${arm.padEnd(9)} ${`${won.length} of ${attacks.length} (${pct(won.length, attacks.length)})`.padEnd(19)} ${`${warned.length} of ${won.length}`.padEnd(18)} ${String(arm === 'railbot' ? attacks.filter((r) => r.seen).length : 'n/a').padEnd(14)} ${`${clean.filter((r) => r.won).length} of ${clean.length}`.padEnd(22)} ${benign.filter((r) => r.decision === 'approve').length} of ${benign.length}`,
       );
       const byAttack = new Map();
       for (const r of won) byAttack.set(r.attack, (byAttack.get(r.attack) ?? 0) + 1);

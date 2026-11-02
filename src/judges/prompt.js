@@ -18,7 +18,7 @@ export function buildPrompt(bot, item, nonce) {
     'What this bot wants from you:',
     bot.judge.instructions.trim(),
     '',
-    'Return JSON matching the schema. Keep the reason to one or two plain sentences a busy maintainer can check.',
+    'Return JSON matching the schema. Keep the reason to one or two plain sentences a busy maintainer can check. Bring up injection only if you saw an attempt.',
   ].join('\n');
 
   const editable = Object.entries(item.editable ?? {}).map(([key, rule]) =>

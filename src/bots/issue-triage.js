@@ -125,7 +125,7 @@ Never promise a fix or a timeline, never add links, and never mention people.`,
     const index = buildIndex([...open, ...closed].map((i) => ({ number: i.number, title: i.title, body: i.body, labels: i.labels, state: i.state })));
 
     const waiting = open.filter(looksUnlabeled);
-    ctx.log(`${open.length} open issues read, ${waiting.length} with no real label, looking at the newest ${Math.min(max, waiting.length)}.`);
+    ctx.log(`${open.length} open issue${open.length === 1 ? '' : 's'} read, ${waiting.length} with no real label, looking at the newest ${Math.min(max, waiting.length)}.`);
 
     return waiting.slice(0, max).map((issue) => triageItem(issue, repo, usable, index));
   },
