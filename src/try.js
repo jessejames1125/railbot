@@ -15,6 +15,13 @@ export const BUILT_IN = { 'stale-prs': staleBot, 'issue-triage': triageBot, 'rel
 
 const paint = { approve: green, reject: red, hold: yellow };
 
+/** A 90-line release note shouldn't push the other bots off the screen. */
+export function clipLines(text, max = 14) {
+  const lines = String(text).split('\n');
+  if (lines.length <= max) return text;
+  return [...lines.slice(0, max), `(${lines.length - max} more lines, all of them in the audit log)`].join('\n');
+}
+
 function printBot(write, bot, result, logs) {
   write('');
   write(bold(bot.name.toUpperCase().replace('-', ' ')));
@@ -35,7 +42,7 @@ function printBot(write, bot, result, logs) {
     for (const flag of s.flags ?? []) write(`  ${red('flag:')} ${safe(flag)}`);
     if (decision !== 'reject') {
       const text = s.action?.body ?? (s.action?.comment ? `Comment: ${s.action.comment}` : null);
-      if (text) write(dim(describeAction(text)));
+      if (text) write(dim(describeAction(clipLines(text))));
     }
   }
 }

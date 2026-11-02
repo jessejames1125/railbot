@@ -8,7 +8,7 @@ import { buildIndex } from '../src/bots/lib.js';
 import stale, { readTimeline, waitingDays } from '../src/bots/stale-prs.js';
 import triage, { suggestLabels } from '../src/bots/issue-triage.js';
 import notes, { buildNotes, classify, nextVersion } from '../src/bots/release-notes.js';
-import { tryRepo } from '../src/try.js';
+import { clipLines, tryRepo } from '../src/try.js';
 import { readJournal } from '../src/journal.js';
 import { paths } from '../src/files.js';
 import { tempDir } from './helpers.js';
@@ -242,6 +242,14 @@ test('try: nothing but GET ever reaches GitHub, and a second try repeats nothing
   assert.match(text, /#7 PR 7/);
   assert.match(text, /Readme typo/);
   assert.match(text, /new thing/);
+});
+
+test('try: a long draft is cut on screen and kept whole in the log', () => {
+  const long = Array.from({ length: 60 }, (_, i) => `line ${i}`).join('\n');
+  const out = clipLines(long, 12);
+  assert.equal(out.split('\n').length, 13);
+  assert.match(out, /48 more lines, all of them in the audit log/);
+  assert.equal(clipLines('short\ntext', 12), 'short\ntext');
 });
 
 test('try: refuses anything that is not owner/repo', async () => {
