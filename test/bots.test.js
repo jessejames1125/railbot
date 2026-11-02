@@ -170,6 +170,14 @@ test('release notes: sorts changes the way a reader expects', () => {
   assert.equal(classify('Something vague', ['bug']), 'fix');
   assert.equal(classify('ci: faster runs'), 'internal');
   assert.equal(classify('Rework internals'), 'internal');
+  assert.equal(classify('Something vague', ['kind/feature']), 'feature');
+});
+
+test('release notes: an area label such as "feat: css" says where, not what kind', () => {
+  assert.equal(classify('fix: keep css order', ['feat: css']), 'fix');
+  assert.equal(classify('test: skip a case under bundled dev', ['feat: dev']), 'internal');
+  assert.equal(classify('fix: wrong path', ['bug: upstream']), 'fix');
+  assert.equal(classify('docs: a note', ['bug: upstream']), 'docs');
 });
 
 test('release notes: suggests a version from what changed', () => {

@@ -23,8 +23,8 @@ export function classify(title, labels = []) {
   const type = m?.groups.type.toLowerCase();
   if (m?.groups.bang || /\bBREAKING\b/.test(title) || has(/breaking/)) return 'breaking';
   if (has(/depend|renovate|dependabot/) || /^(bump|update|upgrade)\b.* (from|to) v?\d/i.test(title) || type === 'deps' || /^(chore|fix|build)\(deps(-dev)?\)/i.test(title)) return 'deps';
-  if (has(/^(type[:/\s-]*)?(feature|feat|enhancement)/)) return 'feature';
-  if (has(/^(type[:/\s-]*)?(bug|fix)/)) return 'fix';
+  if (has(/^((type|kind)[:/\s-]*)?(feature|feat|enhancement|new feature)s?$/)) return 'feature';
+  if (has(/^((type|kind)[:/\s-]*)?(bug|bugfix|bug fix|fix)$/)) return 'fix';
   if (has(/doc/)) return 'docs';
   if (type) {
     if (['feat', 'feature'].includes(type)) return 'feature';
