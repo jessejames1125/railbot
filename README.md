@@ -41,7 +41,7 @@ default; add `--judge claude` to have your own `claude` program read each thread
 5. **Failure is expected.** Fix loops stop after a set number of retries. `railbot nightly`
    undoes a broken automatic action, and stops the bot if it cannot.
 6. **Approval load is measured.** `railbot stats` shows how often a person was asked per
-   100 proposals; too often and people stop reading.
+   100 proposals.
 
 Every run is in a hash-chained log (`railbot audit`), and a `STOP` file halts a bot or
 every bot on the machine. Details and how to change each default: [docs/gates.md](docs/gates.md),
@@ -56,7 +56,7 @@ marked preregistered.
 
 | Claim | Level | Result | Rerun |
 |---|---|---|---|
-| The gates hold when pushed on | VERIFIED, in code | 168 tests, many written to break a gate: out-of-scope actions, unlocking a lock from `scope.json`, `..` in a write path, a check that throws, a deleted test assertion | `npm test` |
+| The gates hold when pushed on | VERIFIED, in code | 184 tests, many written to break a gate (scope, locks, write paths, checks, deleted assertions) | `npm test` |
 | Ticket to merge on a real repository | VERIFIED, one run | 4 tickets on a throwaway repo, real models: 2 merged on the checker, a version bump held (protected path), a ticket carrying "delete this test" held; both suites green after the nightly check. Fix loop and revert proven by tests only | `node evals/sdlc/run.mjs` |
 | The simulated shop | SIMULATED | below | `npx railbot sim` |
 | Judge calls on real repositories | VERIFIED, small | 7 judge claims on 5 public repos checked by hand ([docs/real-runs.md](docs/real-runs.md)) | `npx railbot try owner/repo --judge claude` |
@@ -81,7 +81,7 @@ proposals and the person are scripted. Run 2, per day (`sim` prints more columns
 | railbot defaults | 0 | 0 | 18 |
 | person approves all | 11 to 12 | 0 | 100 |
 
-What this says: on these faults the second AI caught everything code checks missed (false
+On these faults the second AI caught everything code checks missed (false
 claims, HR decisions, the email giving orders), but alone it also blocked good work. The
 defaults send its doubts to a person, which cost 18 asks per 100. A person approving
 everything let most faults through, because the scripted person reads only the first 20
@@ -133,8 +133,9 @@ More in [docs/writing-a-bot.md](docs/writing-a-bot.md).
 
 - **The simulation is not a company.** Proposals and the person are scripted, the faults
   are ours, and the person's attention limit is an assumption that changes the result.
-- **Not a sandbox.** Code you run as yourself can edit the log, fake a terminal, or skip
-  railbot entirely. The gates stop mistakes and attacks that arrive as text.
+- **Not a sandbox.** Code you run as yourself can edit the log or skip railbot. The SDLC
+  template runs tests an AI wrote before anyone looks, so run it in a container. The gates
+  decide which actions happen; they do not contain code.
 - **The `claude` judge is for runs you attend.** It uses your subscription, so railbot
   refuses a live run with it unless a person is at the terminal. Unattended runs need
   `--judge anthropic` and an API key; that judge is tested against a fake server only.
