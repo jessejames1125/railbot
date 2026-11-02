@@ -159,7 +159,8 @@ async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, h
       ui({ type: 'skipped', id: item.id, status: state.status });
       continue;
     }
-    if (state && state.hash === hash && ['waiting', 'approved'].includes(state.status)) {
+    // Same item and no change: keep the answer, unless a different judge should read what still waits.
+    if (state && state.hash === hash && (state.status === 'approved' || (state.status === 'waiting' && state.judgedBy === judge.name))) {
       summary.skipped++;
       continue;
     }

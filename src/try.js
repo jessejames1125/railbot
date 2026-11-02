@@ -47,8 +47,9 @@ export async function tryRepo(opts) {
   const parsed = parseRepo(opts.repo);
   if (!parsed) throw new Error(`"${opts.repo}" is not a repository. Use owner/repo.`);
   const names = opts.botNames?.length ? opts.botNames : Object.keys(BUILT_IN);
-  const dir = opts.stateDir ?? join(homedir(), '.railbot', 'try', `${parsed.owner}__${parsed.repo}`);
-  const github = readGitHub({ cacheDir: join(dir, 'cache'), fetchImpl: opts.fetchImpl });
+  const repoDir = opts.stateDir ?? join(homedir(), '.railbot', 'try', `${parsed.owner}__${parsed.repo}`);
+  const dir = join(repoDir, opts.judge.name);
+  const github = readGitHub({ cacheDir: join(repoDir, 'cache'), fetchImpl: opts.fetchImpl });
   const started = Date.now();
 
   write(`${bold(`railbot try ${parsed.full}`)}  ${dim('read-only, practice mode, nothing is sent')}`);

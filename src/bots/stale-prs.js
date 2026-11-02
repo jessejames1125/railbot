@@ -15,19 +15,21 @@ export function readTimeline(pr, timeline, now) {
   const when = (e) => Date.parse(e.submitted_at ?? e.created_at ?? e.committer?.date ?? e.author?.date ?? 0) || 0;
   const pushes = timeline.filter((e) => e.event === 'committed' || e.event === 'head_ref_force_pushed').map(when);
   const lastPush = pushes.length ? Math.max(...pushes) : Date.parse(pr.created_at);
-  const reviews = timeline.filter((e) => e.event === 'reviewed' && e.state !== 'commented' && e.state !== 'pending' && !isBot(e.user));
+  const reviews = timeline.filter((e) => e.event === 'reviewed' && e.state !== 'pending' && !isBot(e.user) && e.user?.login !== pr.user?.login);
   const lastChanges = Math.max(0, ...reviews.filter((r) => r.state === 'changes_requested').map(when));
   const lastApproval = Math.max(0, ...reviews.filter((r) => r.state === 'approved').map(when));
   const comments = timeline
     .filter((e) => e.event === 'commented' && !isBot(e.user))
     .map((e) => ({ by: e.user?.login, role: e.author_association, at: when(e), body: e.body ?? '' }));
   const lastMaintainer = [...comments].reverse().find((c) => MAINTAINER.has(c.role) && c.by !== pr.user?.login);
+  const authorSpoke = Math.max(0, ...comments.filter((c) => c.by === pr.user?.login).map((c) => c.at));
   const botChatter = timeline.filter((e) => e.event === 'commented' && isBot(e.user)).length;
 
   let waitingOn;
   if (lastChanges > lastPush && lastChanges > lastApproval) waitingOn = 'author';
   else if (lastApproval > lastPush) waitingOn = 'merge';
-  else if (reviews.length === 0) waitingOn = 'first-review';
+  else if (lastMaintainer && lastMaintainer.at > lastPush && lastMaintainer.at > authorSpoke) waitingOn = 'author-reply';
+  else if (reviews.length === 0 && !lastMaintainer) waitingOn = 'first-review';
   else waitingOn = 're-review';
 
   const daysAgo = (ms) => (ms ? Math.floor((now.getTime() - ms) / 86_400_000) : null);
@@ -49,6 +51,7 @@ export function waitingDays(read, ageDays) {
   switch (read.waitingOn) {
     case 'author': return read.changesRequestedDays;
     case 'merge': return read.approvedDays;
+    case 'author-reply': return read.lastMaintainer?.days ?? ageDays;
     case 'first-review': return ageDays;
     default: return read.lastPushDays;
   }
@@ -60,6 +63,8 @@ function draft({ waitingOn, author, reviewers, idle, facts }) {
   switch (waitingOn) {
     case 'author':
       return `This has been quiet for ${idle} days. @${author}, it looks like it is waiting on you: changes were requested ${facts.waitingDays} days ago. Are you still working on it? If not, say so and a maintainer can take it over or close it.${sig}`;
+    case 'author-reply':
+      return `The last word here came from a maintainer ${facts.waitingDays} days ago. @${author}, is this still moving? If not, say so and a maintainer can take it over or close it.${sig}`;
     case 'merge':
       return `This was approved ${facts.waitingDays} days ago and has not been merged. Is something blocking it?${who ? ` ${who}` : ''}${sig}`;
     case 'first-review':
@@ -88,6 +93,7 @@ export default defineBot({
 Approve when the PR is real work that a nudge could move forward and the nudge is aimed at the right person.
 Reject when the thread shows a nudge would be noise or rude: someone said it is blocked, waiting on another change or a release, deliberately parked, abandoned on purpose, replaced by another PR, or the author already replied and is waiting too.
 Hold when you can't tell.
+The facts say who code thinks it is waiting on. Code can't read the discussion, so correct it if the thread says otherwise.
 You may rewrite "body" if the draft misreads the thread, but keep it under 80 words, name the same people or fewer, and keep the last line saying a bot drafted it. Never add links.`,
   },
 
@@ -118,7 +124,7 @@ You may rewrite "body" if the draft misreads the thread, but keep it under 80 wo
         ageDays, requestedReviewers: reviewers, labels: (pr.labels ?? []).map((l) => l.name),
         ...read, recentComments: undefined, lastMaintainer: read.lastMaintainer ? { by: read.lastMaintainer.by, days: read.lastMaintainer.days } : null,
       };
-      const nudged = read.waitingOn === 'author' ? `@${author}` : reviewers.length ? reviewers.map((r) => `@${r}`).join(' ') : 'maintainers';
+      const nudged = ['author', 'author-reply'].includes(read.waitingOn) ? `@${author}` : reviewers.length ? reviewers.map((r) => `@${r}`).join(' ') : 'maintainers';
       items.push({
         // Tied to the last activity: a nudge moves updated_at, so the same quiet spell is never nudged twice.
         id: `pr-${pr.number}-quiet-since-${pr.updated_at.slice(0, 10)}`,

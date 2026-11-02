@@ -20,7 +20,7 @@ export function foldState(events) {
         Object.assign(s, { status: 'proposed', hash: e.itemHash, item: e.item, action: e.item.action, verdict: null, flags: [], approvedHash: null });
         break;
       case 'judged':
-        Object.assign(s, { status: 'judged', verdict: e.verdict, flags: e.flags, action: e.action, finalHash: e.finalHash });
+        Object.assign(s, { status: 'judged', verdict: e.verdict, flags: e.flags, action: e.action, finalHash: e.finalHash, judgedBy: e.judge });
         break;
       case 'closed':
         Object.assign(s, { status: e.status, reason: e.reason });

@@ -44,6 +44,9 @@ test('stale PRs: reads who it is waiting on from the timeline', () => {
   assert.equal(readTimeline(p, [committed(50), reviewed('changes_requested', 45)], NOW).waitingOn, 'author');
   assert.equal(readTimeline(p, [committed(50), reviewed('changes_requested', 45), committed(40)], NOW).waitingOn, 're-review');
   assert.equal(readTimeline(p, [committed(50), reviewed('approved', 30)], NOW).waitingOn, 'merge');
+  assert.equal(readTimeline(p, [committed(50), commented(30, 'maint', 'MEMBER', 'Why this way?')], NOW).waitingOn, 'author-reply');
+  assert.equal(readTimeline(p, [committed(50), commented(30, 'maint', 'MEMBER', 'Why?'), commented(20, 'alice', 'CONTRIBUTOR', 'Because.')], NOW).waitingOn, 're-review');
+  assert.equal(readTimeline(p, [committed(50), reviewed('commented', 30)], NOW).waitingOn, 're-review');
   const t = readTimeline(p, [committed(50), reviewed('approved', 30), committed(20)], NOW);
   assert.equal(t.waitingOn, 're-review');
   assert.equal(waitingDays(t, 100), 20);
@@ -232,7 +235,7 @@ test('try: nothing but GET ever reaches GitHub, and a second try repeats nothing
   await tryRepo(opts);
   assert.equal(calls.length, firstRequests, 'the second try reads from the cache');
   assert.deepEqual([...new Set(calls.map((c) => c.method))], ['GET']);
-  const { events } = readJournal(paths(stateDir, 'stale-prs').journal);
+  const { events } = readJournal(paths(`${stateDir}/rules`, 'stale-prs').journal);
   assert.equal(events.filter((e) => e.type === 'proposed').length, 1);
   const text = lines.join('\n');
   assert.match(text, /Nothing was sent/);
