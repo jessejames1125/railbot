@@ -11,6 +11,7 @@
   "exports": {
     ".": "./src/index.js",
     "./github": "./src/github.js",
+    "./package.json": "./package.json",
     "./bots/*": "./src/bots/*"
   },
   "files": [

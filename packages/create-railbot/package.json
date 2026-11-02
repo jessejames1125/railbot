@@ -1,0 +1,18 @@
+{
+  "name": "create-railbot",
+  "version": "0.1.0",
+  "description": "Make a new railbot project: npx create-railbot my-bot, then npm start.",
+  "license": "MIT",
+  "author": "jessejames1125",
+  "type": "module",
+  "bin": {
+    "create-railbot": "bin.js"
+  },
+  "files": ["bin.js", "README.md"],
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "railbot": "0.1.0"
+  }
+}
