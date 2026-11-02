@@ -12,7 +12,8 @@ ticket in tickets/
   -> second AI (the judge, a different model from the author) checks the final diff
   -> deterministic gates: tests pass, coverage did not drop, diff under maxDiff lines,
      no protected path, no removed assertion, nothing left open from the reviewer
-  -> all clear: merge. Anything flagged: a person decides.
+  -> all clear: merge, after testing the merge against main as it is right then.
+     Anything flagged: a person decides.
 nightly: `railbot nightly` runs your slow suite on each merge and on the commit before
 it; a merge that broke it is reverted with git revert, and anything it cannot revert
 stops the bot with a STOP file.

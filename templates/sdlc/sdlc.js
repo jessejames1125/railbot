@@ -205,9 +205,15 @@ Hold when you cannot tell.`,
       return items;
     },
 
+    // Main may have moved since the change was checked, so test the merge itself.
     async recheck(item) {
       const head = git(repo, 'rev-parse', item.action.branch);
-      return head === item.action.commit ? null : 'the branch moved after it was checked';
+      if (head !== item.action.commit) return 'the branch moved after it was checked';
+      return detached(item.action.base, (dir) => {
+        const m = spawnSync('git', [...IDENTITY, 'merge', '--no-ff', '--no-edit', item.action.commit], { cwd: dir, encoding: 'utf8' });
+        if (m.status !== 0) return 'it conflicts with main now; rebase the branch or delete it and run again';
+        return sh(dir, c.test).ok ? null : 'the tests fail when it is merged with the current main';
+      });
     },
 
     async act(item) {

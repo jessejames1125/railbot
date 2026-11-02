@@ -151,6 +151,21 @@ test('coverage that would drop blocks the merge', async (t) => {
   assert.match(out.items[0].reason, /coverage would drop/);
 });
 
+test('two changes that each pass alone: the second is tested against the new main and dropped on conflict', async (t) => {
+  const env = makeRepo(t);
+  writeFileSync(join(env.tickets, 'a.md'), 'Add clamp.');
+  writeFileSync(join(env.tickets, 'b.md'), 'Add mul.');
+  const author = { id: 'script:author', async edit(cwd, prompt) {
+    const extra = /Add mul/.test(prompt) ? 'export const mul = (a, b) => a * b;\n' : 'export const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));\n';
+    writeFileSync(join(cwd, 'src', 'math.js'), `${MATH}${extra}`);
+  } };
+  const b = bot(env, author);
+  switchOn(env.root, b);
+  const out = await runBot(b, live(env.root));
+  assert.deepEqual(out.items.map((s) => s.status), ['done', 'dropped']);
+  assert.match(out.items[1].reason, /conflicts with main/);
+});
+
 test('assertion counting: removed minus added', () => {
   assert.equal(assertionsRemoved('-  assert.equal(a, 1);\n+  assert.equal(a, 2);'), 0);
   assert.equal(assertionsRemoved('-  expect(x).toBe(1);\n-  assert.ok(y);'), 2);
