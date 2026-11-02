@@ -92,14 +92,14 @@ try {
   await type('npm start');
   for (const answer of ['a', 'a', 'a']) {
     await waitFor(/\[q\]uit/);
-    await sleep(1800);
+    await sleep(1100);
     await type(answer);
   }
   await waitFor(/Audit log/);
-  await sleep(2500);
+  await sleep(1200);
   await type('npx railbot audit --item reply-to-5-injection.txt');
   await waitFor(/closed/);
-  await sleep(3500);
+  await sleep(800);
   term.kill();
 } finally {
   server.close();
