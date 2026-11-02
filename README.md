@@ -9,10 +9,8 @@ customers, send follow-ups, merge pull requests. You write down each bot's scope
 kind of action gets a gate sized to the damage it could do: code checks for low risk, a
 second AI for medium, you for high. Everything starts in practice mode.
 
-**What the evidence shows, and what it does not.** The gates are proven by tests that try
-to break them. The chart comes from a made-up shop with scripted proposals and a scripted
-person: it shows how the gates behave on faults we planted, not what a real business would
-see. Real runs are listed separately and labeled.
+Tests that try to break the gates prove them. The chart is a made-up shop with planted
+faults, not a real business; real runs are labeled separately.
 
 ```
 npx railbot try expressjs/express    # read-only on a public repo, nothing is sent
@@ -81,17 +79,14 @@ proposals and the person are scripted. Run 2, per day (`sim` prints more columns
 | railbot defaults | 0 | 0 | 18 |
 | person approves all | 11 to 12 | 0 | 100 |
 
-On these faults the second AI caught everything code checks missed (false
-claims, HR decisions, the email giving orders), but alone it also blocked good work. The
-defaults send its doubts to a person, which cost 18 asks per 100. A person approving
-everything let most faults through, because the scripted person reads only the first 20
-items a day with care; with unlimited care it missed 3 over 3 days. That attention limit is
-our assumption, and it decides that row.
+The second AI caught everything code checks missed, but alone it also blocked good work.
+The defaults send its doubts to a person: 18 asks per 100. A person approving everything
+let most faults through because the scripted person reads only 20 items a day with care,
+an assumption that decides that row.
 
-Two of the seven hypotheses we wrote down before running failed. The defaults did not beat
-the second AI alone on faults (both 0, in both runs). And run 1 asked the person 52 to 53
-times per 100 against a line of 25, because our generator left out facts a careful checker needed; we fixed the
-generator, said so in the plan, and kept run 1 in the [ledger](evals/LEDGER.md).
+Two of seven preregistered hypotheses failed: the defaults did not beat the second AI alone
+on faults (both 0), and run 1 asked the person 52 times per 100 against a line of 25
+because our generator left out facts. Run 1 stays in the [ledger](evals/LEDGER.md).
 
 ## Templates
 
@@ -136,9 +131,6 @@ More in [docs/writing-a-bot.md](docs/writing-a-bot.md).
 - **Not a sandbox.** Code you run as yourself can edit the log or skip railbot. The SDLC
   template runs tests an AI wrote before anyone looks, so run it in a container. The gates
   decide which actions happen; they do not contain code.
-- **The `claude` judge is for runs you attend.** It uses your subscription, so railbot
-  refuses a live run with it unless a person is at the terminal. Unattended runs need
-  `--judge anthropic` and an API key; that judge is tested against a fake server only.
 - **Untested against real services:** live GitHub writes (only read-only `try` was run),
   the Anthropic API judge, and the CodeRabbit adapter.
 - **Never run on macOS, and CI has never run** (the repository has no remote yet).
@@ -148,15 +140,11 @@ More in [docs/writing-a-bot.md](docs/writing-a-bot.md).
 
 ## Why not
 
-- **MetaGPT, ChatDev, CAMEL** are frameworks for agents doing work in roles.
-  **TheAgentCompany** benchmarks whether agents complete office tasks. They measure what
-  agents can do; railbot measures whether controls contain the damage when they get it
-  wrong, and what that costs in a person's time.
-- **AgentDojo** measures planted prompt-injection attacks against defenses, and is the
-  closest research tool. It does not model a person approving or a ladder of gate setups.
-- **NeMo Guardrails, Invariant** are runtime guardrail layers with their own policy
-  languages; railbot is smaller and aimed at bots that act on a schedule.
-- **A script that calls a model and then acts** is what railbot replaces.
+- **MetaGPT, ChatDev, TheAgentCompany** measure what agents can do; railbot measures
+  whether controls contain the damage when they get it wrong, and the cost in a person's time.
+- **AgentDojo** measures prompt-injection defenses but does not model a person approving.
+- **NeMo Guardrails, Invariant** are guardrail layers with their own policy languages;
+  railbot is smaller and aimed at bots that act on a schedule.
 
 ## License
 

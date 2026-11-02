@@ -120,9 +120,6 @@ const limitsOf = (bot, scope) => ({
 export function liveRefusal(bot, judge, p, attended, journalProblems = []) {
   if (typeof bot.act !== 'function') return 'this bot has no act() function, so it can only practice';
   if (!judge.canGoLive) return `the ${judge.name} judge is for practice only; use --judge claude or --judge anthropic`;
-  if (judge.needsAttendedLive && !attended) {
-    return `the ${judge.name} judge runs on a personal subscription and needs someone at the terminal for a live run; use --judge anthropic with your own API key for unattended runs`;
-  }
   const live = readLive(p.live);
   if (!live) return 'the live switch is off; run "railbot go-live" in a terminal first';
   if (live.bot !== bot.name) return `the live switch was set for ${live.bot}, not ${bot.name}`;

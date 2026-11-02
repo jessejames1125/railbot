@@ -39,7 +39,6 @@ export function claudeCliJudge(opts = {}) {
     name: 'claude',
     model,
     canGoLive: true,
-    needsAttendedLive: true,
     async decide({ bot, item }) {
       const { system, user } = buildPrompt(bot, item);
       return askClaude({ system, user, schema: verdictSchema(item) }, { ...opts, model });

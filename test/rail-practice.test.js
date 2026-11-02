@@ -70,12 +70,3 @@ test('go-live needs the exact words typed, and practice turns it off', (t) => {
   goPractice(dir, bot);
   assert.equal(existsSync(join(dir, '.railbot', 'test-bot', 'live.json')), false);
 });
-
-test('a judge that needs someone present refuses a live run with nobody there', async (t) => {
-  const dir = tempDir(t);
-  const { bot, acted } = testBot([item('a')]);
-  switchOn(dir, bot);
-  const judge = { ...realishJudge(), needsAttendedLive: true };
-  await assert.rejects(runBot(bot, { dir, mode: 'live', judge, approver: approveAll, attended: false }), /needs someone at the terminal/);
-  assert.deepEqual(acted, []);
-});
