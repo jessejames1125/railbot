@@ -279,7 +279,11 @@ async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, h
       route('person');
       journal.append('queued', { mode, id: item.id });
     } else if (gates.person === 'never') {
-      if (!useChecker || approved) {
+      if (flags.length) {
+        // A hold means "ask a person". With nobody to ask, it fails closed.
+        route('blocked');
+        journal.append('closed', { mode, id: item.id, status: 'blocked', reason: `needs a person and there is none: ${flags[0]}` });
+      } else if (!useChecker || approved) {
         route('auto');
         auto('code', 'no person in this setup');
       } else {
