@@ -91,6 +91,6 @@ export async function tryRepo(opts) {
   write('');
   write(green('Nothing was sent.') + dim(`  ${((Date.now() - started) / 1000).toFixed(1)}s, ${github.stats.requests} GitHub requests${github.stats.remaining !== null ? `, ${github.stats.remaining} left this hour` : ''}.`));
   write(dim(`Audit log for each bot: ${shortPath(join(dir, '.railbot'))}`));
-  write(`Keep one: ${bold('npx create-railbot my-bot --bot stale-prs --repo ' + parsed.full)}`);
+  write(`Keep one: ${bold('npx railbot new my-bot --bot stale-prs --repo ' + parsed.full)}`);
   return { dir, results, failed: failed.length };
 }

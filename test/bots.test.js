@@ -340,3 +340,12 @@ test('github: writes need a token and go only through send()', async () => {
     if (saved[1]) process.env.GH_TOKEN = saved[1];
   }
 });
+
+test('stale-prs: the try summary names who it waits on in plain words', () => {
+  const line = (waitingOn) => stale.summary({ item: { facts: { waitingOn, waitingDays: 40, idleDays: 12, nudges: 'the reviewers' } } });
+  assert.equal(line('re-review'), 'waiting 40d for a second review (last activity 12d ago); would nudge the reviewers');
+  assert.match(line('author-reply'), /^waiting 40d for the author's reply /);
+  assert.match(line('first-review'), /^waiting 40d for a first review /);
+  assert.match(line('merge'), /^waiting 40d for a merge /);
+  assert.match(line('author'), /^waiting 40d for the author's changes /);
+});

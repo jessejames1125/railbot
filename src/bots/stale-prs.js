@@ -49,6 +49,8 @@ export function readTimeline(pr, timeline, now) {
   };
 }
 
+const WAITING_FOR = { author: "the author's changes", merge: 'a merge', 'author-reply': "the author's reply", 'first-review': 'a first review', 're-review': 'a second review' };
+
 /** How long the person it waits on has had it, which can be far longer than the last activity. */
 export function waitingDays(read, ageDays) {
   switch (read.waitingOn) {
@@ -149,7 +151,7 @@ You may rewrite "body" if the draft misreads the thread, but keep it under 80 wo
     return items;
   },
 
-  summary: (e) => `waiting on ${e.item.facts.waitingOn.replace('-', ' ')} for ${e.item.facts.waitingDays}d, last activity ${e.item.facts.idleDays}d ago; would nudge ${e.item.facts.nudges}`,
+  summary: (e) => `waiting ${e.item.facts.waitingDays}d for ${WAITING_FOR[e.item.facts.waitingOn] ?? e.item.facts.waitingOn} (last activity ${e.item.facts.idleDays}d ago); would nudge ${e.item.facts.nudges}`,
 
   async recheck(item, { read }) {
     const pr = await read.github.get(`/repos/${item.action.repo}/pulls/${item.action.number}`);
