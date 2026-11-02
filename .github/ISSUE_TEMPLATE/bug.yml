@@ -1,0 +1,23 @@
+name: Bug
+description: Something railbot did that it should not have, or did not do
+body:
+  - type: input
+    id: version
+    attributes:
+      label: railbot version, Node version, operating system
+      description: "`npx railbot doctor` prints most of this."
+    validations:
+      required: true
+  - type: textarea
+    id: did
+    attributes:
+      label: What you ran and what happened
+      description: Paste the commands and the output. `railbot audit --item <id>` helps if an item is involved.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
