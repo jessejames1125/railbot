@@ -15,6 +15,8 @@ import { makeJudge, recordingJudge } from './judges/index.js';
 import { findClaude } from './judges/claude-cli.js';
 import { buildWithClaude, scaffold, TEMPLATES } from './scaffold.js';
 import { foldState } from './state.js';
+import { nightly } from './nightly.js';
+import { approvalLoad } from './stats.js';
 import { BUILT_IN, tryRepo } from './try.js';
 import { bold, dim, eventPrinter, green, red, terminalApprover, wrap, yellow } from './ui.js';
 import { safeForTerminal as safe } from './untrusted.js';
@@ -45,9 +47,11 @@ Safety
   railbot practice [bot.js]        Turn live runs off again.
   railbot resolve <id> done|failed Say what really happened after a crash.
   railbot reopen <id>              Send a closed item back for a fresh yes.
+  railbot nightly [bot.js] [--live]    Check what ran; undo what broke, or stop the bot.
 
 Look
   railbot queue                    What is waiting, approved, or in doubt.
+  railbot stats [--live]           Where proposals went: ran alone, second AI, a person, stopped.
   railbot audit [--verify] [--item id]    Read the log, or check nobody changed it.
   railbot doctor                   Check Node, judges, tokens and stop files.
 
@@ -197,6 +201,36 @@ function cmdQueue(values) {
   }
   if (!rows.length) say('Nothing is waiting, approved or in doubt.');
   for (const s of rows) say(`${s.status.padEnd(9)} ${s.mode.padEnd(8)} ${safe(s.id)}  ${dim(safe(s.item?.title ?? ''))}`);
+  return 0;
+}
+
+async function cmdNightly(args, values) {
+  const bot = await loadBot(args[0]);
+  const mode = values.live ? 'live' : 'practice';
+  const out = await nightly(bot, { dir: process.cwd(), mode, ui: () => {} });
+  if (out.note) say(out.note);
+  say(`Checked ${out.checked}: ${out.ok} fine, ${out.undone.length} undone, ${out.broken.length} broken, ${out.unchecked.length} could not be checked.`);
+  for (const u of out.undone) say(yellow(`Undone ${safe(u.id)}: ${safe(u.reason)}`));
+  for (const b of out.broken) say(red(`Broken ${safe(b.id)}: ${safe(b.reason)}. Undo by hand: ${safe(b.how)}`));
+  for (const u of out.unchecked) say(dim(`Not checked ${safe(u.id)}: ${safe(u.error)}`));
+  if (out.stopped) say(red('The bot is stopped until you look. Run railbot resume when it is fixed.'));
+  return out.stopped ? 3 : 0;
+}
+
+function cmdStats(values) {
+  const dir = process.cwd();
+  const name = botNameInFolder(dir, values.bot);
+  const { events } = readJournal(paths(dir, name).journal);
+  const mode = values.live ? 'live' : 'practice';
+  const l = approvalLoad(events, mode);
+  if (values.json) {
+    say(JSON.stringify(l, null, 2));
+    return 0;
+  }
+  say(`${l.proposals} proposals in ${mode} mode.`);
+  say(`  ran with no person:   ${l.auto} by code (low risk), ${l.checker} on the second AI (medium risk)`);
+  say(`  asked a person:       ${l.person} (${l.personPer100} per 100)`);
+  say(`  stopped by a gate:    ${l.refused} outside scope, ${l.blocked} blocked by a check, ${l.rejected} rejected by the judge`);
   return 0;
 }
 
@@ -372,6 +406,8 @@ async function main() {
     case 'run': return cmdRun(args, values);
     case 'review': return cmdReview(values);
     case 'queue': return cmdQueue(values);
+    case 'stats': return cmdStats(values);
+    case 'nightly': return cmdNightly(args, values);
     case 'audit': return cmdAudit(values);
     case 'check': return cmdCheck(args, values);
     case 'doctor': return cmdDoctor();
