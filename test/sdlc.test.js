@@ -186,3 +186,66 @@ test('CodeRabbit output: findings, tolerance for missing fields, and failures ar
   assert.throws(() => parseCodeRabbit('', 1, 'auth required'), /did not finish/);
   assert.equal(parseCodeRabbit('{"type":"complete"}', 2).length, 0);
 });
+
+test('assertion counting: an assertion turned into a comment counts as removed', () => {
+  assert.equal(assertionsRemoved('-  assert.equal(a, 1);\n+  // assert.equal(a, 1);'), 1);
+  assert.equal(assertionsRemoved('-  expect(x).toBe(1);\n+  /* expect(x).toBe(1); */'), 1);
+  assert.equal(assertionsRemoved('-  assert.ok(y);\n+  # assert.ok(y)'), 1);
+});
+
+test('the test command does not see secret-looking environment variables', async (t) => {
+  const env = makeRepo(t);
+  writeFileSync(join(env.tickets, 'clamp.md'), 'Add clamp.');
+  process.env.RAILBOT_PROBE_API_KEY = 'not-a-real-key';
+  t.after(() => delete process.env.RAILBOT_PROBE_API_KEY);
+  const b = bot(env, scripted([CLAMP]), quietReviewer(), { test: 'node -e "process.exit(process.env.RAILBOT_PROBE_API_KEY ? 1 : 0)"' });
+  switchOn(env.root, b);
+  const out = await runBot(b, live(env.root));
+  assert.equal(out.items[0].status, 'done', JSON.stringify(out.items[0].flags));
+});
+
+test('a test change that skips tests or exits early waits for a person', async (t) => {
+  for (const [name, line] of [['exit', 'process.exit(0);'], ['skip', "test.skip('later', () => {});"]]) {
+    const env = makeRepo(t);
+    writeFileSync(join(env.tickets, `${name}.md`), 'Add clamp.');
+    const b = bot(env, scripted([{ ...CLAMP, 'test/fast/clamp.test.js': `${CLAMP['test/fast/clamp.test.js']}${line}\n` }]));
+    switchOn(env.root, b);
+    const out = await runBot(b, live(env.root));
+    assert.equal(out.items[0].status, 'waiting', name);
+    assert.ok(out.items[0].flags.some((f) => /skips a test or exits early/.test(f)), JSON.stringify(out.items[0].flags));
+  }
+});
+
+test('coverage that cannot be read waits for a person instead of passing', async (t) => {
+  const env = makeRepo(t);
+  writeFileSync(join(env.tickets, 'clamp.md'), 'Add clamp.');
+  const b = bot(env, scripted([CLAMP]), quietReviewer(), { coverage: 'node -e "console.log(1)"' });
+  switchOn(env.root, b);
+  const out = await runBot(b, live(env.root));
+  assert.equal(out.items[0].status, 'waiting');
+  assert.ok(out.items[0].flags.some((f) => /coverage could not be read/.test(f)), JSON.stringify(out.items[0].flags));
+});
+
+test('a rename into a protected path waits for a person', async (t) => {
+  const env = makeRepo(t);
+  writeFileSync(join(env.repo, 'src', 'data.txt'), 'pinned versions\n');
+  g(env.repo, 'add', '-A');
+  g(env.repo, 'commit', '-q', '-m', 'data');
+  writeFileSync(join(env.tickets, 'rename.md'), 'Rename the data file.');
+  const author = { id: 'script:author', async edit(cwd) { g(cwd, 'mv', 'src/data.txt', 'src/data.lock'); } };
+  const b = bot(env, author);
+  switchOn(env.root, b);
+  const out = await runBot(b, live(env.root));
+  assert.equal(out.items[0].status, 'waiting');
+  assert.ok(out.items[0].flags.some((f) => /protected/.test(f)), JSON.stringify(out.items[0].flags));
+});
+
+test('a diff too long for the checker to read in full waits for a person', async (t) => {
+  const env = makeRepo(t);
+  writeFileSync(join(env.tickets, 'big.md'), 'Add a table.');
+  const b = bot(env, scripted([{ ...CLAMP, 'src/table.js': `export const T = '${'x'.repeat(25_000)}';\n` }]));
+  switchOn(env.root, b);
+  const out = await runBot(b, live(env.root));
+  assert.equal(out.items[0].status, 'waiting');
+  assert.ok(out.items[0].flags.some((f) => /too long for the checker/.test(f)), JSON.stringify(out.items[0].flags));
+});

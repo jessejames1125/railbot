@@ -23,10 +23,15 @@ function git(cwd, ...args) {
   return r.stdout.trim();
 }
 
-/** Runs a command the person configured, as fixed text. */
+const SECRET_NAME = /KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|COOKIE|SESSION|PRIVATE|AUTH/i;
+
+/**
+ * Runs a command the person configured, as fixed text. The tests run code an AI wrote, so
+ * environment variables that look like secrets are left out. This is not a sandbox.
+ */
 function sh(cwd, command, timeout = 600_000) {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !SECRET_NAME.test(k)));
   // A test runner above us would otherwise turn the project's own test run into its child.
-  const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   const r = spawnSync(command, { cwd, env, encoding: 'utf8', shell: true, windowsHide: true, timeout });
   return { ok: r.status === 0, out: `${r.stdout ?? ''}${r.stderr ?? ''}`.slice(-6000) };
@@ -38,14 +43,32 @@ const coverageOf = (text) => {
 };
 
 const ASSERTION = /\b(assert|expect)\s*[.(]/;
+const COMMENT = /^\s*(\/\/|\/\*|\*|#)/;
 
-/** Lines that removed an assertion, from a unified diff. */
+/** Lines that removed an assertion, from a unified diff. An assertion turned into a comment counts as removed. */
 export function assertionsRemoved(diff) {
   const lines = diff.split('\n');
-  const removed = lines.filter((l) => l.startsWith('-') && !l.startsWith('---') && ASSERTION.test(l)).length;
-  const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++') && ASSERTION.test(l)).length;
+  const removed = lines.filter((l) => l.startsWith('-') && !l.startsWith('---') && ASSERTION.test(l) && !COMMENT.test(l.slice(1))).length;
+  const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++') && ASSERTION.test(l) && !COMMENT.test(l.slice(1))).length;
   return Math.max(0, removed - added);
 }
+
+const TEST_FILE = /(^|\/)(tests?|__tests__|spec)\/|\.(test|spec)\.[a-z]+$/i;
+const ESCAPE = /process\.exit\s*\(|\.(skip|only|todo)\s*\(|\b(skip|todo)\s*:\s*true|\bxit\s*\(|\bxdescribe\s*\(/;
+
+/** Added lines in test files that skip tests or end the run early, from a unified diff. */
+export function testEscapes(diff) {
+  let file = '';
+  const out = [];
+  for (const l of diff.split('\n')) {
+    if (l.startsWith('+++ ')) file = l.slice(4).replace(/^b\//, '');
+    else if (l.startsWith('+') && TEST_FILE.test(file) && ESCAPE.test(l) && !COMMENT.test(l.slice(1))) out.push(`${file}: ${l.slice(1).trim().slice(0, 80)}`);
+  }
+  return out;
+}
+
+/** How much of the diff the checker reads. A longer diff waits for a person. */
+const CHECKER_READS = 20_000;
 
 export const DEFAULTS = Object.freeze({
   base: 'main',
@@ -133,7 +156,8 @@ export function makeSdlcBot(config) {
         },
       });
       const head = git(wt.dir, 'rev-parse', 'HEAD');
-      const numstat = git(wt.dir, 'diff', '--numstat', `${base}...HEAD`).split('\n').filter(Boolean).map((l) => l.split('\t'));
+      // --no-renames lists a rename as its old and new paths in full, so path rules see both.
+      const numstat = git(wt.dir, 'diff', '--numstat', '--no-renames', `${base}...HEAD`).split('\n').filter(Boolean).map((l) => l.split('\t'));
       return {
         branch,
         head,
@@ -144,6 +168,7 @@ export function makeSdlcBot(config) {
         testsPassed: last.tests.ok,
         coverage: last.coverage,
         assertionsRemoved: assertionsRemoved(last.diff),
+        testEscapes: testEscapes(last.diff),
         open: loop.status === 'escalate' ? loop.findings : [],
         retries: loop.retries,
         reviewer: reviewer.name,
@@ -160,7 +185,13 @@ export function makeSdlcBot(config) {
     protectedPaths(c.protected),
     (item) => (item.facts.assertions_removed > 0 ? { hold: `the change removes ${item.facts.assertions_removed} test assertion(s)` } : null),
     (item) => (item.facts.open_findings?.length ? { hold: `the fix loop stopped after ${item.facts.retries} retries with ${item.facts.open_findings.length} finding(s) open` } : null),
-    (item) => (c.coverage && item.facts.coverage != null && item.facts.coverage_main != null && item.facts.coverage < item.facts.coverage_main ? { block: `coverage would drop from ${item.facts.coverage_main}% to ${item.facts.coverage}%` } : null),
+    (item) => (item.facts.test_escapes?.length ? { hold: `the change skips a test or exits early: ${item.facts.test_escapes[0]}` } : null),
+    (item) => {
+      if (!c.coverage) return null;
+      if (item.facts.coverage == null || item.facts.coverage_main == null) return { hold: 'coverage could not be read, so a drop cannot be ruled out' };
+      return item.facts.coverage < item.facts.coverage_main ? { block: `coverage would drop from ${item.facts.coverage_main}% to ${item.facts.coverage}%` } : null;
+    },
+    (item) => (item.facts.diffChars > CHECKER_READS ? { hold: `the diff is ${item.facts.diffChars} characters, too long for the checker to read in full` } : null),
   ];
 
   return defineBot({
@@ -196,9 +227,9 @@ Hold when you cannot tell.`,
           id: `merge-${slug}-${w.head.slice(0, 10)}`,
           title: `Merge ${w.branch} for ticket ${file}`,
           action: { type: 'merge', repo, base: c.base, branch: w.branch, commit: w.head },
-          facts: { tests_passed: w.testsPassed, diffLines: w.diffLines, files: w.files, coverage: w.coverage, coverage_main: baseline, assertions_removed: w.assertionsRemoved, open_findings: w.open, retries: w.retries, reviewer: w.reviewer, author: author.id },
+          facts: { tests_passed: w.testsPassed, diffLines: w.diffLines, files: w.files, coverage: w.coverage, coverage_main: baseline, assertions_removed: w.assertionsRemoved, test_escapes: w.testEscapes, diffChars: w.diff.length, open_findings: w.open, retries: w.retries, reviewer: w.reviewer, author: author.id },
           writes: w.files,
-          untrusted: { ticket, diff: w.diff.slice(0, 20000) },
+          untrusted: { ticket, diff: w.diff.slice(0, CHECKER_READS) },
           preview: `git merge --no-ff ${w.branch} (${w.diffLines} lines in ${w.files.join(', ')})`,
         });
       }

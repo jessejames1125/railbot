@@ -11,7 +11,9 @@ ticket in tickets/
   -> author fixes blocking findings and failing tests, at most maxRetries times
   -> second AI (the judge, a different model from the author) checks the final diff
   -> deterministic gates: tests pass, coverage did not drop, diff under maxDiff lines,
-     no protected path, no removed assertion, nothing left open from the reviewer
+     no protected path (renames included), no removed or commented-out assertion, no
+     added skip or early exit in a test, a diff short enough for the judge to read whole,
+     nothing left open from the reviewer
   -> all clear: merge, after testing the merge against main as it is right then.
      Anything flagged: a person decides.
 nightly: `railbot nightly` runs your slow suite on each merge and on the commit before
@@ -23,6 +25,12 @@ Settings are in `sdlc.json`: `repo` (a path to a local clone), `base`, `test`,
 `nightly`, `coverage` (a command whose output has an "all files | NN" line, such as
 `node --test --experimental-test-coverage`), `author`, `reviewer` (`local` or
 `coderabbit`), `reviewerModel`, `maxRetries`, `maxDiff`.
+
+**Your tests run code an AI wrote, as you, on this machine, before any person looks.** A
+ticket is outside text and can steer what the author writes, tests included. The bot leaves
+out environment variables whose names look like secrets (KEY, TOKEN, SECRET, PASSWORD and
+similar) when it runs them, but that is not a sandbox: run this flow in a container, a
+virtual machine, or a user account with no credentials and no other repositories.
 
 Practice mode still creates `bot/*` branches in the repo (the work has to happen
 somewhere to be checked); it never merges. `railbot go-live` turns merging on.
