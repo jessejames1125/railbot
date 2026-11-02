@@ -391,7 +391,7 @@ async function main() {
     }
     case 'reopen': {
       if (!args[0]) throw new Usage('railbot reopen <id>');
-      reopenItem(process.cwd(), withName(values), args[0], args.slice(1).join(' '));
+      reopenItem(process.cwd(), withName(values), args[0], args.slice(1).join(' '), { attended: Boolean(process.stdin.isTTY) });
       say(green(`${args[0]} is back in the queue and needs a fresh yes.`));
       return 0;
     }

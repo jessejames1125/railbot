@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { paths, writeStop } from '../src/files.js';
 import { runBot } from '../src/engine.js';
+import { readJournal } from '../src/journal.js';
 import { approveAll, item, realishJudge, switchOn, tempDir, testBot } from './helpers.js';
 
 const liveOpts = (dir, extra = {}) => ({ dir, mode: 'live', judge: realishJudge(), approver: approveAll, attended: true, ...extra });
@@ -98,4 +99,19 @@ test('every stop is written to the log', async (t) => {
   await runBot(bot, { dir, judge: realishJudge() });
   const { readJournal } = await import('../src/journal.js');
   assert.ok(readJournal(p.journal).events.some((e) => e.type === 'stopped' && e.reason.includes('testing')));
+});
+
+test('created during the last check before a send: it does not go', async (t) => {
+  const dir = tempDir(t);
+  const { bot, acted } = testBot([item('a')], {
+    async recheck() {
+      writeStop(paths(dir, bot.name).stop, 'too late');
+      return null;
+    },
+  });
+  switchOn(dir, bot);
+  const out = await runBot(bot, liveOpts(dir));
+  assert.ok(out.stopped);
+  assert.deepEqual(acted, []);
+  assert.equal(readJournal(paths(dir, bot.name).journal).events.some((e) => e.type === 'act-start'), false);
 });

@@ -1,7 +1,8 @@
 // Rail: send limits live in code and count what started, not what finished.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { defineBot, runBot, Refused } from '../src/engine.js';
+import { defineBot, liveRefusal, runBot, Refused } from '../src/engine.js';
+import { paths, writeJsonAtomic } from '../src/files.js';
 import { approveAll, item, realishJudge, switchOn, tempDir, testBot } from './helpers.js';
 
 const many = (n) => Array.from({ length: n }, (_, i) => item(`i${i}`));
@@ -115,4 +116,27 @@ test('practice obeys the same limits and keeps its own count', async (t) => {
   switchOn(dir, bot);
   const liveRun = await live(bot, dir);
   assert.equal(liveRun.sent, 2);
+});
+
+test('setting the clock back before sending does not hide those sends later', async (t) => {
+  const dir = tempDir(t);
+  let now = new Date('2026-11-02T10:00:00Z');
+  const clock = () => now;
+  const { bot, acted } = testBot(many(8), { limits: { perRun: 2, perDay: 3 } });
+  switchOn(dir, bot);
+  await live(bot, dir, { clock });
+  assert.equal(acted.length, 2);
+  now = new Date('2026-10-31T10:00:00Z');
+  await live(bot, dir, { clock });
+  assert.equal(acted.length, 3);
+  now = new Date('2026-11-02T10:05:00Z');
+  await live(bot, dir, { clock });
+  assert.equal(acted.length, 3);
+});
+
+test('a live switch with no limits written in it is refused', (t) => {
+  const dir = tempDir(t);
+  const { bot } = testBot([]);
+  writeJsonAtomic(paths(dir, bot.name).live, { bot: bot.name });
+  assert.match(liveRefusal(bot, realishJudge(), paths(dir, bot.name), true), /limits\.perRun/);
 });

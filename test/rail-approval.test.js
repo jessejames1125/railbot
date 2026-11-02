@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { PassThrough } from 'node:stream';
 import test from 'node:test';
+import { reopenItem } from '../src/cli-actions.js';
 import { runBot } from '../src/engine.js';
 import { terminalApprover } from '../src/ui.js';
 import { approveAll, item, realishJudge, switchOn, tempDir, testBot } from './helpers.js';
@@ -125,4 +126,40 @@ test('outside text cannot draw on the screen during a prompt', async (t) => {
   await answer;
   assert.equal(printed.includes('\x1b'), false);
   assert.equal(printed.includes('\r'), false);
+});
+
+test('a person saying no is final, and a blocked item stays blocked', async (t) => {
+  const dir = tempDir(t);
+  const { bot } = testBot([item('a'), item('b', { action: { type: 'test', body: `key ghp_${'x'.repeat(30)}` }, outbound: { fields: ['body'] } })]);
+  switchOn(dir, bot);
+  const no = { name: 'test', async ask() { return { decision: 'reject' }; } };
+  await runBot(bot, { dir, mode: 'live', judge: realishJudge(), approver: no, attended: true });
+  assert.throws(() => reopenItem(dir, bot.name, 'a'), /said no/);
+  assert.throws(() => reopenItem(dir, bot.name, 'b'), /blocked/);
+});
+
+test('overriding a judge rejection takes a person at a terminal, and a fresh yes', async (t) => {
+  const dir = tempDir(t);
+  const { bot, acted } = testBot([item('a')]);
+  switchOn(dir, bot);
+  const judge = realishJudge(async () => ({ decision: 'reject', reason: 'no', injection_seen: false }));
+  await runBot(bot, { dir, mode: 'live', judge, approver: approveAll, attended: true });
+  assert.throws(() => reopenItem(dir, bot.name, 'a'), /terminal/);
+  reopenItem(dir, bot.name, 'a', 'wrong call', { attended: true });
+  await runBot(bot, { dir, mode: 'live', judge, attended: true });
+  assert.deepEqual(acted, [], 'reopening alone sends nothing');
+});
+
+test('a judge that failed gets another try on the next run', async (t) => {
+  const dir = tempDir(t);
+  const { bot } = testBot([item('a')]);
+  let calls = 0;
+  const judge = realishJudge(async () => {
+    if (++calls === 1) throw new Error('out of usage');
+    return { decision: 'approve', reason: 'fine now', injection_seen: false };
+  });
+  await runBot(bot, { dir, judge });
+  const out = await runBot(bot, { dir, judge });
+  assert.equal(calls, 2);
+  assert.equal(out.items[0].verdict.reason, 'fine now');
 });

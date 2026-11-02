@@ -69,7 +69,7 @@ export function liveRefusal(bot, judge, p, attended, journalProblems = []) {
   if (!live) return 'the live switch is off; run "railbot go-live" in a terminal first';
   if (live.bot !== bot.name) return `the live switch was set for ${live.bot}, not ${bot.name}`;
   for (const key of ['perRun', 'perDay']) {
-    if (bot.limits[key] > live.limits?.[key]) {
+    if (!(bot.limits[key] <= live.limits?.[key])) {
       return `limits.${key} is now ${bot.limits[key]} but go-live approved ${live.limits?.[key]}; run "railbot go-live" again to approve the new limit`;
     }
   }
@@ -160,7 +160,7 @@ async function proposeAndJudge({ bot, journal, judge, mode, opts, summary, ui, h
       continue;
     }
     // Same item and no change: keep the answer, unless a different judge should read what still waits.
-    if (state && state.hash === hash && (state.status === 'approved' || (state.status === 'waiting' && state.judgedBy === judge.name))) {
+    if (state && state.hash === hash && (state.status === 'approved' || (state.status === 'waiting' && state.judgedBy === judge.name && !state.verdict?.failed))) {
       summary.skipped++;
       continue;
     }
@@ -268,6 +268,8 @@ async function perform({ bot, journal, mode, opts, summary, ui, halted, clock })
         continue;
       }
     }
+
+    if (typeof bot.recheck === 'function' && mode === 'live' && halted()) return;
 
     // The intent reaches the disk before the action does. If the process dies between
     // here and the outcome line, the next run sees an unresolved start and will not retry.

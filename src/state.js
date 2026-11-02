@@ -69,8 +69,12 @@ export function foldState(events) {
 export function sendsInWindow(events, mode, now, hours = 24) {
   const from = now.getTime() - hours * 3600 * 1000;
   let total = 0;
+  // Time only moves forward in the log, so a send stamped while the clock was set back
+  // counts from the latest moment seen before it.
+  let latest = 0;
   for (const e of events) {
-    if (e.type === 'act-start' && e.mode === mode && Date.parse(e.ts) > from) total += e.sends ?? 1;
+    latest = Math.max(latest, Date.parse(e.ts) || 0);
+    if (e.type === 'act-start' && e.mode === mode && latest > from) total += e.sends ?? 1;
   }
   return total;
 }

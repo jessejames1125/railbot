@@ -53,10 +53,16 @@ export function resolveItem(dir, botName, id, outcome, note = '') {
   });
 }
 
-/** Sends a closed item back to the approval queue. It needs a fresh yes. */
-export function reopenItem(dir, botName, id, note = '') {
+/**
+ * Sends a closed item back to the approval queue. It needs a fresh yes.
+ * @param {{ attended?: boolean }} [opts] whether a person is at a terminal
+ */
+export function reopenItem(dir, botName, id, note = '', { attended = false } = {}) {
   return withJournal(dir, botName, (journal) => {
     const entry = findItem(journal, botName, id, ['live', 'practice']);
+    if (entry.status === 'denied') throw new Error(`A person said no to "${id}", and that is final.`);
+    if (entry.status === 'blocked') throw new Error(`"${id}" was blocked by the outbound check or a changed draft, so it stays closed. Change the bot and let it propose again under a new id.`);
+    if (entry.status === 'rejected' && !attended) throw new Error(`The judge rejected "${id}". Overriding that takes a person at a real terminal.`);
     if (entry.status === 'in-doubt') throw new Error(`"${id}" is in doubt. Run "railbot resolve ${id} done" or "failed" first, so the record says what happened.`);
     if (entry.status === 'done') throw new Error(`"${id}" already went out. Reopening it could send it twice, so that is refused.`);
     journal.append('reopened', { mode: entry.mode, id, note, by: 'terminal' });
