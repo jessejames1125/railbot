@@ -27,3 +27,4 @@ Dates are the laptop's Pacific date; results files are named by the UTC date, wh
 | 7 | 2026-11-01 | Tripwire on real issues, 890 issues | no | 10 flagged, all false alarms | VERIFIED |
 | 8 | 2026-11-01 | First run from a clean copy, local stand-in registry, 3 runs | no | 10.4 to 11.6 seconds on Windows, Node 24. Not from the real npm registry | VERIFIED, local |
 | 9 | 2026-11-01 | Security review by a fresh agent | n/a | 9 findings, all fixed with a failing test first | n/a |
+| 10 | 2026-11-02 | Label eval run 2, Sonnet, 110 issues from 6 repos (`labels/results/2026-11-02.json`, prereg `prereg/labels-2.md`) | yes, not blind | First label right: claude 74 of 104 (71%), rules 39 of 90 (43%), most-used label 38 of 108 (35%). H1 (beat the baseline by 10 points) passed. H2 (70% of applied labels right) failed: 105 of 182 (58%). The issues came from the cache of run 3, so the same issues | VERIFIED |

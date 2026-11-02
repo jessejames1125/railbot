@@ -1,0 +1,2262 @@
+{
+ "date": "2026-11-02",
+ "model": "sonnet",
+ "repos": [
+  "vitejs/vite",
+  "fastify/fastify",
+  "prettier/prettier",
+  "tailwindlabs/tailwindcss",
+  "denoland/deno",
+  "astral-sh/uv"
+ ],
+ "tripwire": {
+  "read": 890,
+  "flagged": 10,
+  "examples": [
+   "prettier/prettier#20113",
+   "prettier/prettier#20105",
+   "tailwindlabs/tailwindcss#20509",
+   "tailwindlabs/tailwindcss#20326",
+   "tailwindlabs/tailwindcss#20255",
+   "tailwindlabs/tailwindcss#20121",
+   "astral-sh/uv#22869",
+   "astral-sh/uv#22384"
+  ]
+ },
+ "rows": [
+  {
+   "repo": "vitejs/vite",
+   "number": 23968,
+   "real": [
+    "bug: upstream"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "hold",
+    "labels": [
+     "bug: upstream"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23930,
+   "real": [
+    "feat: bundled-dev"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "feat: bundled-dev",
+    "feat: hmr",
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: bundled-dev"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23913,
+   "real": [
+    "feat: create-vite"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "regression",
+    "windows only",
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: create-vite",
+     "windows only"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23905,
+   "real": [
+    "documentation"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream",
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "documentation"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23860,
+   "real": [
+    "feat: hmr",
+    "rollup plugin compat",
+    "feat: dev"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: hmr",
+     "feat: dev"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23840,
+   "real": [
+    "documentation"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "documentation"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23810,
+   "real": [
+    "feat: dev"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: hmr"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23809,
+   "real": [
+    "feat: sourcemap"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: css",
+     "feat: sourcemap"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23781,
+   "real": [
+    "feat: bundled-dev"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: bundled-dev",
+     "performance"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23757,
+   "real": [
+    "feat: deps optimizer"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: deps optimizer"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23752,
+   "real": [
+    "feat: deps optimizer"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream",
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: deps optimizer",
+     "feat: ssr"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23751,
+   "real": [
+    "feat: deps optimizer"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: deps optimizer"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23727,
+   "real": [
+    "feat: dev"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: dev",
+     "feat: hmr"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23724,
+   "real": [
+    "documentation"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "documentation"
+   ],
+   "claude": {
+    "decision": "reject",
+    "labels": [
+     "documentation"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23696,
+   "real": [
+    "feat: css"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: css",
+     "feat: dev"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23669,
+   "real": [
+    "feat: deps optimizer"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: deps optimizer",
+     "regression"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23666,
+   "real": [
+    "feat: deps optimizer"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream",
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: deps optimizer"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23652,
+   "real": [
+    "feat: css",
+    "feat: build"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream",
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: css",
+     "feat: build"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23637,
+   "real": [
+    "bug: upstream"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: dev"
+    ]
+   }
+  },
+  {
+   "repo": "vitejs/vite",
+   "number": 23628,
+   "real": [
+    "feat: html"
+   ],
+   "frequent": [
+    "feat: bundled-dev"
+   ],
+   "rules": [
+    "bug: upstream"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feat: css",
+     "feat: html"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6941,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "discussion"
+   ],
+   "rules": [
+    "feature request"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6898,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "discussion"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion",
+     "chore"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6896,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "discussion"
+   ],
+   "rules": [
+    "documentation"
+   ],
+   "claude": {
+    "decision": "reject",
+    "labels": [
+     "documentation"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6834,
+   "real": [
+    "v6.x"
+   ],
+   "frequent": [
+    "discussion"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "v6.x",
+     "discussion"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6507,
+   "real": [
+    "discussion",
+    "v6.x"
+   ],
+   "frequent": [
+    "discussion"
+   ],
+   "rules": [
+    "performances"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "performances"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6318,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "discussion"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion",
+     "dependencies"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6278,
+   "real": [
+    "discussion",
+    "documentation"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "documentation"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6236,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6149,
+   "real": [
+    "documentation"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "documentation",
+    "feature request",
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "documentation"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6043,
+   "real": [
+    "feature request"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "feature request",
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feature request",
+     "discussion"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 6012,
+   "real": [
+    "typescript"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "missing types",
+     "typescript"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5984,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5978,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5959,
+   "real": [
+    "discussion",
+    "internals",
+    "test"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion",
+     "test"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5899,
+   "real": [
+    "feature request"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "question"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5603,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "bug",
+    "bugfix",
+    "documentation"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "discussion"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5491,
+   "real": [
+    "feature request"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "documentation",
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "documentation",
+     "feature request"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5448,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "feature request"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feature request"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5356,
+   "real": [
+    "discussion"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "feature request",
+    "plugin"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feature request",
+     "plugin"
+    ]
+   }
+  },
+  {
+   "repo": "fastify/fastify",
+   "number": 5274,
+   "real": [
+    "feature request"
+   ],
+   "frequent": [
+    "feature request"
+   ],
+   "rules": [
+    "feature request"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "feature request"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20355,
+   "real": [
+    "lang:javascript",
+    "area:multiparser"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "lang:typescript",
+    "lang:javascript",
+    "lang:html"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:multiparser",
+     "area:template literals"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20307,
+   "real": [
+    "lang:javascript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "lang:javascript",
+    "area:idempotency",
+    "area:comments"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:javascript",
+     "area:idempotency",
+     "area:member chains"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20306,
+   "real": [
+    "lang:javascript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "lang:javascript",
+    "area:idempotency"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:javascript",
+     "area:idempotency"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20293,
+   "real": [
+    "lang:yaml"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:yaml"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20258,
+   "real": [
+    "type:intended"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "lang:javascript",
+    "lang:typescript",
+    "area:idempotency"
+   ],
+   "claude": {
+    "decision": "reject",
+    "labels": [
+     "lang:javascript",
+     "lang:typescript",
+     "area:idempotency"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20199,
+   "real": [
+    "lang:markdown"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:markdown"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20176,
+   "real": [
+    "lang:typescript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency",
+    "lang:javascript",
+    "lang:typescript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:idempotency",
+     "lang:typescript"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20175,
+   "real": [
+    "lang:javascript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "lang:javascript",
+    "area:idempotency",
+    "lang:typescript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:typescript",
+     "area:idempotency",
+     "area:comments"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20174,
+   "real": [
+    "lang:typescript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency",
+    "lang:javascript",
+    "lang:typescript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:idempotency",
+     "lang:typescript"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20173,
+   "real": [
+    "lang:javascript"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "lang:javascript",
+    "area:idempotency",
+    "lang:typescript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:typescript",
+     "area:idempotency",
+     "area:comments"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20171,
+   "real": [
+    "lang:javascript"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency",
+    "lang:typescript",
+    "lang:javascript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:ignore",
+     "lang:typescript"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20170,
+   "real": [
+    "lang:javascript",
+    "area:no-semi"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:idempotency",
+     "area:no-semi"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20169,
+   "real": [
+    "lang:typescript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency",
+    "lang:typescript",
+    "lang:javascript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:idempotency",
+     "lang:typescript",
+     "area:comments"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20166,
+   "real": [
+    "lang:typescript",
+    "scope:external"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:typescript"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20162,
+   "real": [
+    "lang:javascript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency",
+    "lang:javascript",
+    "lang:typescript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:idempotency",
+     "lang:typescript"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20161,
+   "real": [
+    "lang:typescript",
+    "area:idempotency"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "area:idempotency",
+    "lang:javascript",
+    "lang:typescript"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:idempotency",
+     "lang:typescript"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20149,
+   "real": [
+    "lang:mdx"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:mdx"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20135,
+   "real": [
+    "lang:markdown"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lang:markdown"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20111,
+   "real": [
+    "type:infra"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [
+    "type:question"
+   ],
+   "claude": {
+    "decision": "hold",
+    "labels": [
+     "type:question"
+    ]
+   }
+  },
+  {
+   "repo": "prettier/prettier",
+   "number": 20099,
+   "real": [
+    "type:infra"
+   ],
+   "frequent": [
+    "lang:javascript"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "type:infra"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 20275,
+   "real": [
+    "upstream"
+   ],
+   "frequent": [
+    "upstream"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "v4",
+     "lightningcss"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 19566,
+   "real": [
+    "upstream"
+   ],
+   "frequent": [
+    "upstream"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "v4"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 18418,
+   "real": [
+    "bug"
+   ],
+   "frequent": [
+    "upstream"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "v4"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 17958,
+   "real": [
+    "upstream"
+   ],
+   "frequent": [
+    "upstream"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "lightningcss",
+     "v4"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 17796,
+   "real": [
+    "upstream"
+   ],
+   "frequent": [
+    "vite"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "standalone"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 17706,
+   "real": [
+    "vite"
+   ],
+   "frequent": [
+    "v4"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "vite"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 17451,
+   "real": [
+    "standalone"
+   ],
+   "frequent": [
+    "v4"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "v4",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 17412,
+   "real": [
+    "vite"
+   ],
+   "frequent": [
+    "v4"
+   ],
+   "rules": [
+    "vite",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "vite",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 16531,
+   "real": [
+    "upstream"
+   ],
+   "frequent": [
+    "v4"
+   ],
+   "rules": [
+    "v4",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "v4",
+     "browser bug"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 15045,
+   "real": [
+    "v4",
+    "backwards compatibility"
+   ],
+   "frequent": [
+    "v4"
+   ],
+   "rules": [
+    "v4",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "v4",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "tailwindlabs/tailwindcss",
+   "number": 15005,
+   "real": [
+    "v4"
+   ],
+   "frequent": [],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "shadow-dom",
+     "v4"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36715,
+   "real": [
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "desktop",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop",
+     "regression"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36712,
+   "real": [
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "desktop",
+    "runtime",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop",
+     "regression"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36698,
+   "real": [
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "desktop"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36599,
+   "real": [
+    "install"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "install"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "install"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36538,
+   "real": [
+    "node compat",
+    "node native extension"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "node native extension"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36537,
+   "real": [
+    "node compat"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "node compat"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "node compat"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36536,
+   "real": [
+    "bug",
+    "node compat"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "node compat"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "node compat"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36527,
+   "real": [
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "desktop",
+    "deno-bundle",
+    "macos"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop",
+     "macos"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36523,
+   "real": [
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "desktop",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36518,
+   "real": [
+    "bug",
+    "node compat"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "node compat"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "node compat"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36516,
+   "real": [
+    "bug",
+    "node compat"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "node compat"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "node compat"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36514,
+   "real": [
+    "bug",
+    "node compat"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "node compat"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36506,
+   "real": [
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "docs",
+    "desktop",
+    "macos"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "desktop",
+     "macos"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36503,
+   "real": [
+    "bug",
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "desktop"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36498,
+   "real": [
+    "bug",
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "docs",
+    "desktop",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36462,
+   "real": [
+    "bug",
+    "ext/fetch"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "ext/fetch"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36456,
+   "real": [
+    "bug",
+    "ext/http"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "regression",
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "regression",
+     "serve"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36418,
+   "real": [
+    "bug",
+    "desktop"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "deno-bundle",
+    "desktop",
+    "macos"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "desktop",
+     "macos"
+    ]
+   }
+  },
+  {
+   "repo": "denoland/deno",
+   "number": 36413,
+   "real": [
+    "bug",
+    "node compat"
+   ],
+   "frequent": [],
+   "rules": [
+    "build",
+    "bug",
+    "docs"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "nextjs",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 23034,
+   "real": [
+    "bug"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:uv-audit",
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22989,
+   "real": [
+    "bug"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22986,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22985,
+   "real": [
+    "bug",
+    "area:uv-audit"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "area:uv-audit"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22979,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "enhancement"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:cache"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22975,
+   "real": [
+    "bug"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "area:cache"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22966,
+   "real": [
+    "bug",
+    "area:windows"
+   ],
+   "frequent": [
+    "enhancement"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "area:windows"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22957,
+   "real": [
+    "question"
+   ],
+   "frequent": [
+    "enhancement"
+   ],
+   "rules": [
+    "dependencies",
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "question",
+     "area:sources"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22951,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:configuration"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22950,
+   "real": [
+    "bug"
+   ],
+   "frequent": [
+    "enhancement"
+   ],
+   "rules": [
+    "preview",
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "bug",
+     "area:configuration"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22944,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:uv-audit"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22941,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "enhancement"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:uv-check"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22913,
+   "real": [
+    "question"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix",
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "question",
+     "area:musl"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22912,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:lock"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22911,
+   "real": [
+    "bug"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:lock"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22905,
+   "real": [
+    "enhancement"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "enhancement"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:configuration"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22872,
+   "real": [
+    "bot:ai-policy-comment",
+    "bot:ai-policy-close"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "reject",
+    "labels": []
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22869,
+   "real": [
+    "bug",
+    "area:windows"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "area:windows",
+     "area:uv-python"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22845,
+   "real": [
+    "question"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "question"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "question"
+    ]
+   }
+  },
+  {
+   "repo": "astral-sh/uv",
+   "number": 22837,
+   "real": [
+    "enhancement",
+    "area:error-messages"
+   ],
+   "frequent": [
+    "bug"
+   ],
+   "rules": [
+    "bug",
+    "bugfix",
+    "enhancement"
+   ],
+   "claude": {
+    "decision": "approve",
+    "labels": [
+     "enhancement",
+     "area:error-messages"
+    ]
+   }
+  }
+ ]
+}
