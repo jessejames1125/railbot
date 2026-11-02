@@ -68,6 +68,21 @@ async function runStale(t, prs, timelines) {
   return { out, calls };
 }
 
+test('stale PRs: says "new commits" only when commits came after the last review', async (t) => {
+  const dir = tempDir(t);
+  const { gh } = fakeGitHub((path) => {
+    if (path === '/repos/o/r/pulls') return [pr(1), pr(2)];
+    if (path === '/repos/o/r/issues/1/timeline') return [committed(90), reviewed('commented', 60)];
+    if (path === '/repos/o/r/issues/2/timeline') return [committed(90), reviewed('commented', 60), committed(50)];
+  });
+  const out = await runBot(stale, { dir, judge: rulesJudge(), clock, params: { repo: 'o/r' }, readTools: { github: gh } });
+  const body = (n) => out.items.find((e) => e.item.action.number === n).action.body;
+  assert.equal(body(1).includes('New commits'), false);
+  assert.match(body(1), /last review was 60 days ago/);
+  assert.match(body(2), /New commits landed 50 days ago/);
+  assert.equal(out.items.find((e) => e.item.action.number === 1).item.facts.waitingDays, 60);
+});
+
 test('stale PRs: skips drafts, bots, recent work and parked labels', async (t) => {
   const { out } = await runStale(t, [
     pr(1), pr(2, { draft: true }), pr(3, { user: { login: 'dependabot[bot]', type: 'Bot' } }),

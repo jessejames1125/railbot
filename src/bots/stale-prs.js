@@ -18,6 +18,7 @@ export function readTimeline(pr, timeline, now) {
   const reviews = timeline.filter((e) => e.event === 'reviewed' && e.state !== 'pending' && !isBot(e.user) && e.user?.login !== pr.user?.login);
   const lastChanges = Math.max(0, ...reviews.filter((r) => r.state === 'changes_requested').map(when));
   const lastApproval = Math.max(0, ...reviews.filter((r) => r.state === 'approved').map(when));
+  const lastReview = Math.max(0, ...reviews.map(when));
   const comments = timeline
     .filter((e) => e.event === 'commented' && !isBot(e.user))
     .map((e) => ({ by: e.user?.login, role: e.author_association, at: when(e), body: e.body ?? '' }));
@@ -36,6 +37,8 @@ export function readTimeline(pr, timeline, now) {
   return {
     waitingOn,
     lastPushDays: daysAgo(lastPush),
+    lastReviewDays: reviews.length ? daysAgo(lastReview) : null,
+    pushedSinceReview: lastPush > lastReview,
     changesRequestedDays: daysAgo(lastChanges),
     approvedDays: daysAgo(lastApproval),
     reviewCount: reviews.length,
@@ -53,7 +56,7 @@ export function waitingDays(read, ageDays) {
     case 'merge': return read.approvedDays;
     case 'author-reply': return read.lastMaintainer?.days ?? ageDays;
     case 'first-review': return ageDays;
-    default: return read.lastPushDays;
+    default: return read.pushedSinceReview ? read.lastPushDays : read.lastReviewDays;
   }
 }
 
@@ -70,6 +73,7 @@ function draft({ waitingOn, author, reviewers, idle, facts }) {
     case 'first-review':
       return `This has been waiting ${facts.waitingDays} days for a first review.${who ? ` ${who}, could you take a look, or say who should?` : ' Could a maintainer take a look, or say who should?'}${sig}`;
     default:
+      if (!facts.pushedSinceReview) return `The last review was ${facts.waitingDays} days ago and nothing has moved since.${who ? ` ${who}, could you take another look?` : ' Could a maintainer take another look?'}${sig}`;
       return `New commits landed ${facts.waitingDays} days ago and have not been re-reviewed.${who ? ` ${who}, could you take another look?` : ' Could a maintainer take another look?'}${sig}`;
   }
 }
