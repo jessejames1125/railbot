@@ -78,7 +78,7 @@ export function scaffold(opts) {
 /**
  * Has the user's own claude program rewrite bot.js in the folder just made, then clears
  * the starter inbox it replaced. Safe mode keeps the person's own settings and notes out
- * of it, and it gets three file tools and nothing else.
+ * of it, and restricted mode with three file tools keeps it to this folder.
  * @param {string} dir
  * @param {string} describe
  * @param {{ found?: {file: string, shim: boolean} | null, run?: typeof spawnSync }} [opts]
@@ -87,13 +87,17 @@ export function scaffold(opts) {
 export function buildWithClaude(dir, describe, opts = {}) {
   const found = opts.found === undefined ? findClaude() : opts.found;
   if (!found) throw new Error('--build-with claude needs the claude program on your PATH.');
-  const prompt = `Change bot.js in this folder so the bot does this:\n\n${describe}\n\nRead BUILDING.md first and follow its rules. Edit bot.js. Keep defineBot, keep limits low, put every piece of outside text in "untrusted", keep "act" as the only place that sends anything, and give every item a stable id. Keep the code short. When the bot needs a service you can't reach from here, leave act() writing to outbox/sent.jsonl with a one-line comment saying what to swap in. If the bot reads local files, also add two small sample files so the first run has something to show. Ignore the inbox folder: it is the old starter and will be deleted. End with one or two sentences saying what the bot does now.`;
-  const args = ['-p', '--safe-mode', '--no-session-persistence', '--tools', 'Read,Edit,Write', '--allowedTools', 'Read,Edit,Write', '--permission-mode', 'acceptEdits'];
+  const prompt = `Change bot.js in this folder so the bot does this:\n\n${describe}\n\nRead BUILDING.md first and follow its rules. Edit bot.js. Keep defineBot, keep limits low, put every piece of outside text in "untrusted", keep "act" as the only place that sends anything, and give every item a stable id. Keep the code short. When the bot needs a service you can't reach from here, leave act() writing to outbox/sent.jsonl with a one-line comment saying what to swap in. If the bot reads local files, also add two small sample files so the first run has something to show. End with one or two sentences saying what the bot does now.`;
+  const args = ['-p', '--safe-mode', '--restricted', '--no-session-persistence', '--tools', 'Read,Edit,Write', '--allowedTools', 'Read,Edit,Write', '--permission-mode', 'acceptEdits'];
   const options = { cwd: dir, input: prompt, encoding: 'utf8', windowsHide: true, timeout: 300_000, env: childEnv() };
   const run = opts.run ?? spawnSync;
-  const res = found.shim ? run(`"${found.file}" ${args.join(' ')}`, { ...options, shell: true }) : run(found.file, args, options);
-  if (res.status !== 0) throw new Error(`The claude program could not build it: ${String(res.stderr || res.stdout || res.error?.message || '').trim().split('\n')[0]}`);
+  // The starter inbox holds a planted attack, which the program has no need to read.
   rmSync(join(dir, 'inbox'), { recursive: true, force: true });
+  const res = found.shim ? run(`"${found.file}" ${args.join(' ')}`, { ...options, shell: true }) : run(found.file, args, options);
+  if (res.status !== 0) {
+    copyTree(join(HERE, 'templates', 'inbox', 'inbox'), join(dir, 'inbox'), { name: basename(dir) });
+    throw new Error(`The claude program could not build it: ${String(res.stderr || res.stdout || res.error?.message || '').trim().split('\n')[0]}`);
+  }
   rmSync(join(dir, 'judge-recordings.json'), { force: true });
   writeFileSync(join(dir, 'README.md'), `# ${basename(dir)}\n\n${describe}\n\nThe code is in \`bot.js\`. Run it in practice mode with \`npm start\`, have a real judge read each item with \`npx railbot run bot.js --judge claude\`, and see \`BUILDING.md\` for everything else.\n`);
   return res.stdout.trim();

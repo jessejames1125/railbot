@@ -69,6 +69,9 @@ export async function askClaude({ system, user, schema }, opts = {}) {
     if (opts.effort) args.push('--effort', opts.effort);
     let input = user;
     if (found.shim) {
+      for (const [name, value] of [['model', opts.model], ['effort', opts.effort]]) {
+        if (value && !/^[\w.:[\]-]+$/.test(value)) throw new Error(`that ${name} name can't be passed safely`);
+      }
       // A .cmd can only run through cmd.exe, so nothing but fixed words may be an argument.
       const promptFile = join(cwd, 'system.txt');
       writeFileSync(promptFile, system);

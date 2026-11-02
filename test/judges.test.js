@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import test from 'node:test';
 import { anthropicJudge, claudeCliJudge, recordedJudge, rulesJudge, recordingJudge } from '../src/judges/index.js';
-import { childEnv, readCliResult } from '../src/judges/claude-cli.js';
+import { askClaude, childEnv, readCliResult } from '../src/judges/claude-cli.js';
 import { item, tempDir, testBot } from './helpers.js';
 
 const { bot } = testBot([]);
@@ -147,4 +147,16 @@ test('a recording of a real judge replays the same verdicts', async (t) => {
   const replay = recordedJudge(file);
   assert.equal((await replay.decide({ item: item('a') })).reason, 'looked at it');
   assert.match(replay.source, /claude sonnet/);
+});
+
+test('claude judge: on the Windows shim path a strange model name never reaches the shell', async () => {
+  let spawned = false;
+  const spawnImpl = () => {
+    spawned = true;
+    throw new Error('should not run');
+  };
+  const prompt = { system: 's', user: 'u', schema: {} };
+  await assert.rejects(askClaude(prompt, { found: { file: 'claude.cmd', shim: true }, model: 'sonnet & calc', spawnImpl }), /model/);
+  await assert.rejects(askClaude(prompt, { found: { file: 'claude.cmd', shim: true }, effort: 'low|x', spawnImpl }), /effort/);
+  assert.equal(spawned, false);
 });
